@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, sid, Auth');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -14,22 +14,21 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Read from headers instead of body
+    const sid = req.headers['sid'];
+    const auth = req.headers['auth'] || req.headers['Auth']; // Some clients might send 'Auth' with capital A
+
     // DEBUG: Log what we received
-    console.log('Request body:', JSON.stringify(req.body));
-    console.log('SID:', req.body.sid);
-    console.log('Auth:', req.body.auth);
-    
-    const { sid, auth } = req.body;
+    console.log('Request headers sid:', sid);
+    console.log('Request headers auth:', auth);
 
     if (!sid || !auth) {
-      console.log('ERROR: Missing sid or auth');
-      console.log('Received:', { sid, auth });
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Missing sid or auth token',
-        debug: { 
-          receivedSid: !!sid, 
+        debug: {
+          receivedSid: !!sid,
           receivedAuth: !!auth,
-          bodyKeys: Object.keys(req.body)
+          headersKeys: Object.keys(req.headers)
         }
       });
     }
