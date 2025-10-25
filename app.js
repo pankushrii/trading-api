@@ -127,7 +127,8 @@ async function step2Validate() {
       headers: {
         'Content-Type': 'application/json',
         'sid': appState.step1.sid,       // Must be included in headers
-        'Auth': appState.step1.auth      // Must be included in headers (case sensitive)
+        'Auth': appState.step1.auth,
+        'Pnakaj':'Choudhary'// Must be included in headers (case sensitive)
       },
       body: JSON.stringify({
         mpin: '190990'  // or any required body param for validation
@@ -135,6 +136,9 @@ async function step2Validate() {
     });
 
     const data = await response.json();
+
+    
+    console.log('[LOG] Validation response:', data);
 
     if (!response.ok) throw new Error(data.error || 'Validation failed');
 
