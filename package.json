@@ -1,9 +1,5 @@
 {
   "name": "kotak-neo-trader",
   "version": "1.0.0",
-  "description": "Kotak NEO Trading Terminal with CORS proxy",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build needed for static site'"
-  }
+  "type": "module"
 }
