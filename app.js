@@ -118,6 +118,11 @@ async function step1Login(totp) {
 
 // Step 2: tradeApiValidate
 async function step2Validate() {
+  console.log('step2Validate called');  // <-- New log at start
+  console.log('Sending validation headers:', {
+    sid: appState.step1.sid,
+    Auth: appState.step1.auth,
+  });
   try {
     elements.apiStatus.textContent = 'Validating session...';
     updateLastActivity();
