@@ -41,14 +41,15 @@ const elements = {
   resetBtn: document.getElementById('resetBtn')
 };
 
-// Utility Functions
 function updateLastActivity() {
   const now = new Date();
   elements.lastActivity.textContent = now.toLocaleTimeString();
+  console.log('[LOG] Last activity updated:', now.toLocaleTimeString());
 }
 
 function showMessage(element, message, type) {
   element.innerHTML = `<div class="message ${type}">${message}</div>`;
+  console.log(`[LOG] Message on ${element.id}:`, message);
 }
 
 function hideMessage(element) {
@@ -65,27 +66,31 @@ function setButtonLoading(button, isLoading) {
   }
 }
 
-function updateSessionStatus(connected) {
-  if (connected) {
+function updateSessionStatus(isConnected) {
+  if (isConnected) {
     elements.sessionStatus.className = 'status-badge connected';
     elements.statusText.textContent = 'Connected';
   } else {
     elements.sessionStatus.className = 'status-badge disconnected';
     elements.statusText.textContent = 'Disconnected';
   }
+  console.log('[LOG] Session status updated:', isConnected ? 'Connected' : 'Disconnected');
 }
 
 function updateStepIndicator(step) {
   elements.currentStepSpan.textContent = step;
   appState.currentStep = step;
+  console.log('[LOG] Step indicator updated to:', step);
 }
 
 function enableSection(section) {
   section.classList.remove('disabled');
+  console.log('[LOG] Enabled section:', section.id);
 }
 
 function disableSection(section) {
   section.classList.add('disabled');
+  console.log('[LOG] Disabled section:', section.id);
 }
 
 // Step 1: tradeApiLogin
@@ -93,6 +98,7 @@ async function step1Login(totp) {
   try {
     elements.apiStatus.textContent = 'Authenticating...';
     updateLastActivity();
+    console.log('[LOG] Starting step1Login with TOTP:', totp);
 
     const response = await fetch(API_CONFIG.endpoints.login, {
       method: 'POST',
@@ -101,54 +107,49 @@ async function step1Login(totp) {
     });
 
     const data = await response.json();
+    console.log('[LOG] step1Login response data:', data);
 
     if (!response.ok) throw new Error(data.error || data.message);
 
-    // ✅ Extract sid and token from nested response
+    // Store sid and auth
     appState.step1.sid = data.data.sid;
-    appState.step1.auth = data.data.token;  // ✅ Use consistent 'auth' naming
+    appState.step1.auth = data.data.token;
     appState.step1.completed = true;
 
     elements.apiStatus.textContent = 'Login Successful';
     return { success: true, data };
   } catch (err) {
+    console.error('[ERROR] step1Login failed:', err);
     return { success: false, error: err.message };
   }
 }
 
 // Step 2: tradeApiValidate
 async function step2Validate() {
-  console.log('step2Validate called');  // <-- New log at start
-  console.log('Sending validation headers:', {
+  console.log('[LOG] step2Validate called');
+  console.log('[LOG] Sending validation headers:', {
     sid: appState.step1.sid,
     Auth: appState.step1.auth,
   });
+
   try {
     elements.apiStatus.textContent = 'Validating session...';
     updateLastActivity();
-
-    console.log('Sending validation headers:', {
-  sid: appState.step1.sid,
-  Auth: appState.step1.auth,
-});
 
     const response = await fetch(API_CONFIG.endpoints.validate, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'sid': appState.step1.sid,       // Must be included in headers
-        'Auth': appState.step1.auth,
-        'Pnakaj':'Choudhary'// Must be included in headers (case sensitive)
+        'sid': appState.step1.sid,
+        'Auth': appState.step1.auth
       },
       body: JSON.stringify({
-        mpin: '190990'  // or any required body param for validation
+        mpin: '190990'
       })
     });
 
     const data = await response.json();
-
-    
-    console.log('[LOG] Validation response:', data);
+    console.log('[LOG] step2Validate response data:', data);
 
     if (!response.ok) throw new Error(data.error || 'Validation failed');
 
@@ -160,6 +161,7 @@ async function step2Validate() {
     updateSessionStatus(true);
     return { success: true, data };
   } catch (err) {
+    console.error('[ERROR] step2Validate failed:', err);
     elements.apiStatus.textContent = 'Error';
     return { success: false, error: err.message };
   }
@@ -170,24 +172,30 @@ async function step3PlaceOrder(orderData) {
   try {
     elements.apiStatus.textContent = 'Placing order...';
     updateLastActivity();
+    console.log('[LOG] Starting step3PlaceOrder with:', orderData);
 
     const response = await fetch(API_CONFIG.endpoints.placeOrder, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        auth: appState.step2.auth,
-        sid: appState.step2.sid,
-        orderData
-      })
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'sid': appState.step2.sid,
+        'Auth': appState.step2.auth,
+        'neo-fin-key': 'neotradeapi'
+      },
+      body: new URLSearchParams({
+        jData: JSON.stringify(orderData)
+      }).toString()
     });
 
     const data = await response.json();
+    console.log('[LOG] step3PlaceOrder response data:', data);
 
     if (!response.ok) throw new Error(data.error || data.message);
 
     elements.apiStatus.textContent = 'Order Placed';
     return { success: true, data };
   } catch (err) {
+    console.error('[ERROR] step3PlaceOrder failed:', err);
     elements.apiStatus.textContent = 'Error';
     return { success: false, error: err.message };
   }
@@ -198,7 +206,7 @@ elements.totpForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const totp = elements.totpInput.value.trim();
 
-  if (!/^[0-9]{6}$/.test(totp)) {
+  if (!/^\d{6}$/.test(totp)) {
     showMessage(elements.step1Message, 'Invalid 6-digit TOTP', 'error');
     return;
   }
