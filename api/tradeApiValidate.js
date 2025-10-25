@@ -14,10 +14,24 @@ export default async function handler(req, res) {
   }
 
   try {
+    // DEBUG: Log what we received
+    console.log('Request body:', JSON.stringify(req.body));
+    console.log('SID:', req.body.sid);
+    console.log('Auth:', req.body.auth);
+    
     const { sid, auth } = req.body;
 
     if (!sid || !auth) {
-      return res.status(400).json({ error: 'Missing sid or auth token' });
+      console.log('ERROR: Missing sid or auth');
+      console.log('Received:', { sid, auth });
+      return res.status(400).json({ 
+        error: 'Missing sid or auth token',
+        debug: { 
+          receivedSid: !!sid, 
+          receivedAuth: !!auth,
+          bodyKeys: Object.keys(req.body)
+        }
+      });
     }
 
     const response = await fetch('https://mis.kotaksecurities.com/login/1.0/tradeApiValidate', {
