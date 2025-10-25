@@ -123,9 +123,9 @@ async function step1Login(totp) {
       throw new Error(data.error || data.message || 'Authentication failed');
     }
     
-    // FIXED: Correct field names from Kotak API
-    appState.step1.sid = data.sid;     // ✅ Direct field
-    appState.step1.token = data.token;   // ✅ Capital A
+    // FIXED: Correct field names from Kotak API// FIXED: Extract from nested data object
+    appState.step1.sid = data.data.sid;
+    appState.step1.auth = data.data.token; // Kotak API uses "token" instead of "Auth"
     appState.step1.completed = true;
     
     elements.apiStatus.textContent = 'Connected';
