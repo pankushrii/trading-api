@@ -8,21 +8,23 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Security Warning Banner -->
+    <!-- Warning Banner -->
     <div class="warning-banner">
-        <span>⚠️</span> <strong>Testing Only:</strong> This app contains hardcoded credentials for testing purposes. Do not use in production!
+        ⚠️ Testing Only: This app contains hardcoded credentials for testing purposes. Do not use in production!
     </div>
 
     <!-- Header -->
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <h1 class="header-title">Kotak NEO Trading Terminal</h1>
-                <div class="header-info">
-                    <div class="step-indicator" id="stepIndicator">Step <span id="currentStep">1</span> of 3</div>
-                    <div class="session-status" id="sessionStatus">
-                        <span class="status-dot status-disconnected"></span>
+                <h1>Kotak NEO Trading Terminal</h1>
+                <div class="header-status">
+                    <div id="sessionStatus" class="status-badge disconnected">
+                        <span class="status-dot"></span>
                         <span id="statusText">Disconnected</span>
+                    </div>
+                    <div class="step-indicator">
+                        Step <span id="currentStep">1</span> of 3
                     </div>
                 </div>
             </div>
@@ -30,20 +32,17 @@
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Step 1: TOTP Authentication -->
-            <section class="auth-section" id="step1Section">
-                <div class="section-header">
-                    <div class="section-number">1</div>
-                    <div>
-                        <h2 class="section-title">TOTP Authentication</h2>
-                        <p class="section-description">Enter the 6-digit code from your authenticator app</p>
-                    </div>
-                    <div class="section-status" id="step1Status"></div>
+    <main class="container">
+        <!-- Step 1: TOTP Authentication -->
+        <section id="step1Section" class="step-section">
+            <div class="card">
+                <div class="card__header">
+                    <h2>Step 1: TOTP Authentication</h2>
+                    <span id="step1Status" class="step-status">● In Progress</span>
                 </div>
-                <div class="section-content">
-                    <form id="totpForm" class="totp-form">
+                <div class="card__body">
+                    <p class="help-text">Enter the 6-digit code from your authenticator app</p>
+                    <form id="totpForm">
                         <div class="form-group">
                             <label for="totpInput" class="form-label">TOTP Code</label>
                             <input 
@@ -54,60 +53,57 @@
                                 maxlength="6"
                                 pattern="[0-9]{6}"
                                 required
+                                autocomplete="off"
                             />
-                            <small class="form-hint">Mobile: +917000560918 | UCC: YIVKF</small>
                         </div>
-                        <button type="submit" class="btn btn--primary btn--lg btn--full-width" id="loginBtn">
-                            <span class="btn-text">Login</span>
-                            <span class="btn-loader hidden">●●●</span>
+                        <button type="submit" id="loginBtn" class="btn btn--primary btn--full-width">
+                            <span>Login</span>
                         </button>
                     </form>
-                    <div class="message-box" id="step1Message"></div>
+                    <div id="step1Message" class="message-container"></div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Step 2: Session Validation -->
-            <section class="auth-section section-disabled" id="step2Section">
-                <div class="section-header">
-                    <div class="section-number">2</div>
-                    <div>
-                        <h2 class="section-title">Session Validation</h2>
-                        <p class="section-description">Validating your session and obtaining trade authorization</p>
-                    </div>
-                    <div class="section-status" id="step2Status"></div>
+        <!-- Step 2: Session Validation -->
+        <section id="step2Section" class="step-section disabled">
+            <div class="card">
+                <div class="card__header">
+                    <h2>Step 2: Session Validation</h2>
+                    <span id="step2Status" class="step-status">● Pending</span>
                 </div>
-                <div class="section-content">
-                    <div class="validation-status" id="validationStatus">
-                        <div class="loader hidden" id="step2Loader">●●●</div>
-                        <div class="message-box" id="step2Message"></div>
+                <div class="card__body">
+                    <p class="help-text">Validating your session and obtaining trade authorization...</p>
+                    <div id="step2Loader" class="loader-container" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Validating session...</p>
                     </div>
+                    <div id="step2Message" class="message-container"></div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Step 3: Place Order -->
-            <section class="auth-section section-disabled" id="step3Section">
-                <div class="section-header">
-                    <div class="section-number">3</div>
-                    <div>
-                        <h2 class="section-title">Place Order</h2>
-                        <p class="section-description">Fill in the order details to execute your trade</p>
-                    </div>
-                    <div class="section-status" id="step3Status"></div>
+        <!-- Step 3: Place Order -->
+        <section id="step3Section" class="step-section disabled">
+            <div class="card">
+                <div class="card__header">
+                    <h2>Step 3: Place Order</h2>
+                    <span id="step3Status" class="step-status">● Pending</span>
                 </div>
-                <div class="section-content">
-                    <form id="orderForm" class="order-form">
-                        <div class="form-grid">
+                <div class="card__body">
+                    <p class="help-text">Fill in the order details to execute your trade</p>
+                    <form id="orderForm">
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="tradingSymbol" class="form-label">Trading Symbol</label>
                                 <input 
                                     type="text" 
                                     id="tradingSymbol" 
                                     class="form-control" 
-                                    placeholder="e.g., PX-BSE-Snsx-83330-CE"
+                                    placeholder="e.g., RELIANCE-EQ"
                                     required
                                 />
                             </div>
-
                             <div class="form-group">
                                 <label for="transactionType" class="form-label">Transaction Type</label>
                                 <select id="transactionType" class="form-control" required>
@@ -115,19 +111,20 @@
                                     <option value="S">Sell</option>
                                 </select>
                             </div>
+                        </div>
 
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="quantity" class="form-label">Quantity</label>
                                 <input 
                                     type="number" 
                                     id="quantity" 
                                     class="form-control" 
-                                    placeholder="Enter quantity"
+                                    placeholder="1"
                                     min="1"
                                     required
                                 />
                             </div>
-
                             <div class="form-group">
                                 <label for="price" class="form-label">Price</label>
                                 <input 
@@ -140,16 +137,17 @@
                                     required
                                 />
                             </div>
+                        </div>
 
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="productCode" class="form-label">Product Code</label>
                                 <select id="productCode" class="form-control" required>
-                                    <option value="CNC">CNC (Cash &amp; Carry)</option>
+                                    <option value="CNC">CNC (Cash & Carry)</option>
                                     <option value="MIS">MIS (Intraday)</option>
                                     <option value="NRML">NRML (Normal)</option>
                                 </select>
                             </div>
-
                             <div class="form-group">
                                 <label for="priceType" class="form-label">Price Type</label>
                                 <select id="priceType" class="form-control" required>
@@ -159,7 +157,9 @@
                                     <option value="SL-M">Stop Loss Market</option>
                                 </select>
                             </div>
+                        </div>
 
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="validity" class="form-label">Validity</label>
                                 <select id="validity" class="form-control" required>
@@ -167,32 +167,36 @@
                                     <option value="IOC">Immediate or Cancel</option>
                                 </select>
                             </div>
-
                             <div class="form-group">
                                 <label for="exchangeSegment" class="form-label">Exchange Segment</label>
                                 <select id="exchangeSegment" class="form-control" required>
                                     <option value="nse_cm">NSE Cash</option>
                                     <option value="bse_cm">BSE Cash</option>
-                                    <option value="nse_fo">NSE F&amp;O</option>
-                                    <option value="bse_fo">BSE F&amp;O</option>
+                                    <option value="nse_fo">NSE F&O</option>
+                                    <option value="bse_fo">BSE F&O</option>
                                 </select>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn--primary btn--lg btn--full-width" id="placeOrderBtn">
-                            <span class="btn-text">Place Order</span>
-                            <span class="btn-loader hidden">●●●</span>
+                        <button type="submit" id="placeOrderBtn" class="btn btn--primary btn--full-width">
+                            <span>Place Order</span>
                         </button>
                     </form>
-                    <div class="message-box" id="step3Message"></div>
+                    <div id="step3Message" class="message-container"></div>
                 </div>
-            </section>
-
-            <!-- Reset Button -->
-            <div class="reset-section" id="resetSection" style="display: none;">
-                <button class="btn btn--secondary btn--full-width" id="resetBtn">Reset &amp; Start Over</button>
             </div>
-        </div>
+        </section>
+
+        <!-- Reset Section -->
+        <section id="resetSection" class="step-section" style="display: none;">
+            <div class="card">
+                <div class="card__body">
+                    <button id="resetBtn" class="btn btn--secondary btn--full-width">
+                        <span>Start Over / Place Another Order</span>
+                    </button>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
@@ -201,11 +205,11 @@
             <div class="footer-content">
                 <div class="footer-item">
                     <span class="footer-label">API Status:</span>
-                    <span id="apiStatus">Ready</span>
+                    <span id="apiStatus" class="footer-value">Ready</span>
                 </div>
                 <div class="footer-item">
                     <span class="footer-label">Last Activity:</span>
-                    <span id="lastActivity">Never</span>
+                    <span id="lastActivity" class="footer-value">Never</span>
                 </div>
             </div>
         </div>
