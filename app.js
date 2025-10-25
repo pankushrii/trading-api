@@ -124,7 +124,7 @@ async function step2Validate() {
 
     const response = await fetch(API_CONFIG.endpoints.validate, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json'
+      headers: { 'Content-Type': 'application/json',
                'sid': appState.step1.sid,
         'Auth': appState.step1.auth},
       body: JSON.stringify({
