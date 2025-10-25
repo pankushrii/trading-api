@@ -122,6 +122,11 @@ async function step2Validate() {
     elements.apiStatus.textContent = 'Validating session...';
     updateLastActivity();
 
+    console.log('Sending validation headers:', {
+  sid: appState.step1.sid,
+  Auth: appState.step1.auth,
+});
+
     const response = await fetch(API_CONFIG.endpoints.validate, {
       method: 'POST',
       headers: {
