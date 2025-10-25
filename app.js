@@ -125,7 +125,7 @@ async function step1Login(totp) {
     
     // FIXED: Correct field names from Kotak API
     appState.step1.sid = data.sid;     // ✅ Direct field
-    appState.step1.auth = data.Auth;   // ✅ Capital A
+    appState.step1.token = data.token;   // ✅ Capital A
     appState.step1.completed = true;
     
     elements.apiStatus.textContent = 'Connected';
@@ -141,9 +141,7 @@ async function step2Validate() {
     elements.apiStatus.textContent = 'Validating session...';
     updateLastActivity();
 
-    console.log('Sending to validate', sid, auth);
-    console.log('Sending to validate--111', appState.step1.sid, appState.step1.aut);
-
+   
     const response = await fetch(API_CONFIG.endpoints.validate, {
       method: 'POST',
       headers: {
@@ -151,7 +149,7 @@ async function step2Validate() {
       },
       body: JSON.stringify({
         sid: appState.step1.sid,   // ✅ Pass stored sid
-        auth: appState.step1.auth  // ✅ Pass stored Auth
+        auth: appState.step1.token  // ✅ Pass stored Auth
       })
     });
     
