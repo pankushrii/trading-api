@@ -1,56 +1,42 @@
 // Application State
 let appState = {
-  step1: {
-    sid: null,
-    auth: null,
-    completed: false
-  },
-  step2: {
-    sid: null,
-    auth: null,
-    completed: false
-  },
+  step1: { sid: null, auth: null, completed: false },
+  step2: { sid: null, auth: null, completed: false },
   currentStep: 1,
   lastActivity: null
 };
 
-// API Configuration - FIXED TO USE VERCEL PROXY
+// API Configuration (Vercel Proxy)
 const API_CONFIG = {
   endpoints: {
-    login: '/api/tradeApiLogin',        // ✅ Use Vercel proxy
-    validate: '/api/tradeApiValidate',   // ✅ Use Vercel proxy
-    placeOrder: '/api/placeOrder'       // ✅ Use Vercel proxy
+    login: '/api/tradeApiLogin',
+    validate: '/api/tradeApiValidate',
+    placeOrder: '/api/placeOrder'
   }
 };
 
 // DOM Elements
 const elements = {
-  // Step indicators
   currentStepSpan: document.getElementById('currentStep'),
   sessionStatus: document.getElementById('sessionStatus'),
   statusText: document.getElementById('statusText'),
-  // Step 1
   totpForm: document.getElementById('totpForm'),
   totpInput: document.getElementById('totpInput'),
   loginBtn: document.getElementById('loginBtn'),
   step1Message: document.getElementById('step1Message'),
   step1Status: document.getElementById('step1Status'),
   step1Section: document.getElementById('step1Section'),
-  // Step 2
   step2Section: document.getElementById('step2Section'),
   step2Loader: document.getElementById('step2Loader'),
   step2Message: document.getElementById('step2Message'),
   step2Status: document.getElementById('step2Status'),
-  // Step 3
   step3Section: document.getElementById('step3Section'),
   orderForm: document.getElementById('orderForm'),
   placeOrderBtn: document.getElementById('placeOrderBtn'),
   step3Message: document.getElementById('step3Message'),
   step3Status: document.getElementById('step3Status'),
-  // Footer
   apiStatus: document.getElementById('apiStatus'),
   lastActivity: document.getElementById('lastActivity'),
-  // Reset
   resetSection: document.getElementById('resetSection'),
   resetBtn: document.getElementById('resetBtn')
 };
@@ -58,7 +44,6 @@ const elements = {
 // Utility Functions
 function updateLastActivity() {
   const now = new Date();
-  appState.lastActivity = now;
   elements.lastActivity.textContent = now.toLocaleTimeString();
 }
 
@@ -80,8 +65,8 @@ function setButtonLoading(button, isLoading) {
   }
 }
 
-function updateSessionStatus(isConnected) {
-  if (isConnected) {
+function updateSessionStatus(connected) {
+  if (connected) {
     elements.sessionStatus.className = 'status-badge connected';
     elements.statusText.textContent = 'Connected';
   } else {
@@ -91,163 +76,145 @@ function updateSessionStatus(isConnected) {
 }
 
 function updateStepIndicator(step) {
-  appState.currentStep = step;
   elements.currentStepSpan.textContent = step;
+  appState.currentStep = step;
 }
 
-function enableSection(sectionElement) {
-  sectionElement.classList.remove('disabled');
+function enableSection(section) {
+  section.classList.remove('disabled');
 }
 
-function disableSection(sectionElement) {
-  sectionElement.classList.add('disabled');
+function disableSection(section) {
+  section.classList.add('disabled');
 }
 
-// API Functions - FIXED FIELD MAPPING
+// Step 1: tradeApiLogin
 async function step1Login(totp) {
   try {
     elements.apiStatus.textContent = 'Authenticating...';
     updateLastActivity();
-    
+
     const response = await fetch(API_CONFIG.endpoints.login, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ totp })
     });
-    
+
     const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || data.message || 'Authentication failed');
-    }
-    
-    // FIXED: Correct field names from Kotak API// FIXED: Extract from nested data object
+
+    if (!response.ok) throw new Error(data.error || data.message);
+
+    // ✅ Extract sid and token from nested response
     appState.step1.sid = data.data.sid;
-    appState.step1.token = data.data.token; // Kotak API uses "token" instead of "Auth"
+    appState.step1.auth = data.data.token;  // ✅ Use consistent 'auth' naming
     appState.step1.completed = true;
-    
-    elements.apiStatus.textContent = 'Connected';
+
+    elements.apiStatus.textContent = 'Login Successful';
     return { success: true, data };
-  } catch (error) {
-    elements.apiStatus.textContent = 'Error';
-    return { success: false, error: error.message };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 }
 
+// Step 2: tradeApiValidate
 async function step2Validate() {
   try {
     elements.apiStatus.textContent = 'Validating session...';
     updateLastActivity();
 
-   
     const response = await fetch(API_CONFIG.endpoints.validate, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sid: appState.step1.sid,   // ✅ Pass stored sid
-        auth: appState.step1.token  // ✅ Pass stored Auth
+        sid: appState.step1.sid,
+        auth: appState.step1.auth     // ✅ Correct variable reference
       })
     });
-    
+
     const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || data.message || 'Validation failed');
-    }
-    
-    // Store new trade session data
-    appState.step2.sid = data.sid;     // ✅ New sid
-    appState.step2.auth = data.Auth;   // ✅ New Auth token
+
+    if (!response.ok) throw new Error(data.error || 'Validation failed');
+
+    appState.step2.sid = data.sid;
+    appState.step2.auth = data.Auth;
     appState.step2.completed = true;
-    
-    elements.apiStatus.textContent = 'Trade Ready';
+
+    elements.apiStatus.textContent = 'Validated';
     updateSessionStatus(true);
     return { success: true, data };
-  } catch (error) {
+  } catch (err) {
     elements.apiStatus.textContent = 'Error';
-    return { success: false, error: error.message };
+    return { success: false, error: err.message };
   }
 }
 
+// Step 3: Place Order
 async function step3PlaceOrder(orderData) {
   try {
     elements.apiStatus.textContent = 'Placing order...';
     updateLastActivity();
-    
+
     const response = await fetch(API_CONFIG.endpoints.placeOrder, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         auth: appState.step2.auth,
         sid: appState.step2.sid,
-        orderData: orderData
+        orderData
       })
     });
-    
+
     const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || data.message || 'Order placement failed');
-    }
-    
+
+    if (!response.ok) throw new Error(data.error || data.message);
+
     elements.apiStatus.textContent = 'Order Placed';
     return { success: true, data };
-  } catch (error) {
+  } catch (err) {
     elements.apiStatus.textContent = 'Error';
-    return { success: false, error: error.message };
+    return { success: false, error: err.message };
   }
 }
 
-// Event Handlers
+// Event: TOTP Login Submit
 elements.totpForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const totp = elements.totpInput.value.trim();
-  
-  if (!/^\d{6}$/.test(totp)) {
-    showMessage(elements.step1Message, '❌ Please enter a valid 6-digit TOTP code', 'error');
+
+  if (!/^[0-9]{6}$/.test(totp)) {
+    showMessage(elements.step1Message, 'Invalid 6-digit TOTP', 'error');
     return;
   }
-  
-  hideMessage(elements.step1Message);
+
   setButtonLoading(elements.loginBtn, true);
-  
+  hideMessage(elements.step1Message);
+
   const result = await step1Login(totp);
-  
   setButtonLoading(elements.loginBtn, false);
-  elements.loginBtn.innerHTML = '<span>Login</span>';
-  
+
   if (result.success) {
     showMessage(elements.step1Message, '✅ Login successful!', 'success');
     elements.step1Status.textContent = '✓';
     disableSection(elements.step1Section);
     updateStepIndicator(2);
     enableSection(elements.step2Section);
-    
-    setTimeout(() => {
-      executeStep2();
-    }, 500);
+
+    setTimeout(() => executeStep2(), 1000);
   } else {
     showMessage(elements.step1Message, `❌ Login failed: ${result.error}`, 'error');
   }
 });
 
+// Step 2 auto execution
 async function executeStep2() {
   elements.step2Loader.style.display = 'block';
   hideMessage(elements.step2Message);
-  
+
   const result = await step2Validate();
-  
   elements.step2Loader.style.display = 'none';
-  
+
   if (result.success) {
-    showMessage(elements.step2Message, '✅ Session validated! Ready to trade.', 'success');
-    elements.step2Status.textContent = '✓';
+    showMessage(elements.step2Message, '✅ Session validated successfully.', 'success');
     disableSection(elements.step2Section);
     updateStepIndicator(3);
     enableSection(elements.step3Section);
@@ -257,47 +224,12 @@ async function executeStep2() {
   }
 }
 
-elements.orderForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  const orderData = {
-    tradingSymbol: document.getElementById('tradingSymbol').value.trim(),
-    transactionType: document.getElementById('transactionType').value,
-    quantity: parseInt(document.getElementById('quantity').value),
-    price: parseFloat(document.getElementById('price').value),
-    productCode: document.getElementById('productCode').value,
-    priceType: document.getElementById('priceType').value,
-    validity: document.getElementById('validity').value,
-    exchangeSegment: document.getElementById('exchangeSegment').value
-  };
-  
-  hideMessage(elements.step3Message);
-  setButtonLoading(elements.placeOrderBtn, true);
-  
-  const result = await step3PlaceOrder(orderData);
-  
-  setButtonLoading(elements.placeOrderBtn, false);
-  elements.placeOrderBtn.innerHTML = '<span>Place Order</span>';
-  
-  if (result.success) {
-    const orderInfo = `✅ Order placed successfully!<br>Symbol: ${orderData.tradingSymbol}<br>Type: ${orderData.transactionType === 'B' ? 'Buy' : 'Sell'}<br>Quantity: ${orderData.quantity}`;
-    showMessage(elements.step3Message, orderInfo, 'success');
-    elements.step3Status.textContent = '✓';
-    elements.resetSection.style.display = 'block';
-    elements.orderForm.reset();
-  } else {
-    showMessage(elements.step3Message, `❌ Order failed: ${result.error}`, 'error');
-  }
-});
+// Reset Button
+elements.resetBtn.addEventListener('click', () => location.reload());
 
-elements.resetBtn.addEventListener('click', () => {
-  location.reload();
-});
-
-// Initialize
+// Initialize App
 elements.apiStatus.textContent = 'Ready';
 elements.lastActivity.textContent = 'Never';
 updateStepIndicator(1);
 updateSessionStatus(false);
-elements.totpInput.focus();
 console.log('Kotak NEO Trading Terminal initialized');
