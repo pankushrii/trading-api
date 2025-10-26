@@ -375,7 +375,7 @@
                             headers: { 'Content-Type': 'application/json',
                                      'sid': sessionState.step2.sid,
                                 'auth': sessionState.step2.auth },
-                            body: JSON.stringify({ auth: sessionState.step1.auth, sid: sessionState.step1.sid, orderData })
+                            body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, orderData })
                         });
                         const data = await response.json();
                         if (!response.ok) throw new Error(data.error || data.message || 'Order placement failed');
