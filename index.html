@@ -276,9 +276,13 @@
                             body: JSON.stringify({ totp })
                         });
                         const data = await response.json();
+                         // Store sid and token in state
+    
+                        console.log('[LOG] Captured sid:', data);
+    
                         if (!response.ok) throw new Error(data.error || data.message || 'Login failed');
-                        sessionState.step1.sid = data.sid;
-                        sessionState.step1.auth = data.Auth;
+                        sessionState.step1.sid = data.data.sid;
+                        sessionState.step1.auth = data.data.token;
                         showMessage('step1Message', 'Login successful! Proceeding to validation...', 'success');
                         markSectionCompleted('step1Section', 'step1Status');
                         updateLastActivity();
@@ -301,7 +305,10 @@
                 try {
                     const response = await fetch('/api/tradeApiValidate', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json',
+                                  'sid': sessionState.step1.sid,
+                                'auth': sessionState.step1.auth 
+                                 },
                         body: JSON.stringify({ sid: sessionState.step1.sid, auth: sessionState.step1.auth })
                     });
                     const data = await response.json();
