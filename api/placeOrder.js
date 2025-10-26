@@ -54,6 +54,7 @@ export default async function handler(req, res) {
       jData: JSON.stringify(jData),
     }).toString();
 
+  
     console.log('Sending place order to Kotak:', {
       headers: {
         Auth: auth,
@@ -64,6 +65,9 @@ export default async function handler(req, res) {
       body: formBody,
     });
 
+    console.log('Sending place order to Kotak:', jData);
+    console.log('Sending place order to Kotak:', JSON.stringify(jData));
+    
     const kotakResponse = await fetch('https://mis.kotaksecurities.com/quick/order/rule/ms/place', {
       method: 'POST',
       headers: {
