@@ -18,6 +18,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  
+    // DEBUG: Log what we received
+    console.log('Request body place Order:', req.body);
+    console.log('Request headers place order:', Object.keys(req.headers));
+
+
   try {
     const { auth, sid, orderData } = req.body;
 
