@@ -368,7 +368,7 @@
                         const response = await fetch('/api/placeOrder', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, jData: JSON.stringify(orderData1) })
+                            body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, orderData) })
                         });
                         const data = await response.json();
                         if (!response.ok) throw new Error(data.error || data.message || 'Order placement failed');
