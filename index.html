@@ -367,7 +367,9 @@
                     try {
                         const response = await fetch('/api/placeOrder', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json',
+                                     'sid': sessionState.step1.sid,
+                                'auth': sessionState.step1.auth },
                             body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, orderData })
                         });
                         const data = await response.json();
