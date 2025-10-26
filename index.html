@@ -342,6 +342,23 @@
                         validity: document.getElementById('validity').value,
                         exchangeSegment: document.getElementById('exchangeSegment').value
                     };
+
+                     const orderData1 = {
+      am: "NO",
+      dq: "0",
+      es: document.getElementById('exchangeSegment').value,
+      mp: "0",
+      pc: document.getElementById('productCode').value,
+      pf: "N",
+      pr: document.getElementById('price').value,
+      pt: document.getElementById('priceType').value,
+      qt: document.getElementById('quantity').value,
+      rt: document.getElementById('validity').value,
+      tp: "0",
+      ts: document.getElementById('tradingSymbol').value,
+      tt: document.getElementById('transactionType').value
+    };
+
                     const btn = document.getElementById('placeOrderBtn');
                     btn.disabled = true;
                     btn.innerHTML = '<span class="loader"></span><span>Placing Order...</span>';
@@ -351,7 +368,7 @@
                         const response = await fetch('/api/placeOrder', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, orderData })
+                            body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, jData: JSON.stringify(orderData1) })
                         });
                         const data = await response.json();
                         if (!response.ok) throw new Error(data.error || data.message || 'Order placement failed');
