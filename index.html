@@ -365,6 +365,11 @@
                     clearMessage('step3Message');
                     document.getElementById('apiStatus').textContent = 'Placing order...';
                     try {
+                        console.log('[LOG] Place Order-1 sid:', sessionState.step1.sid);
+                        console.log('[LOG] Place Order-2 sid:', sessionState.step2.sid);
+                        
+                        console.log('[LOG] Place Order-11 sid:', sessionState.step1.auth);
+                        console.log('[LOG] Place Order-22 sid:', sessionState.step2.auth);
                         const response = await fetch('/api/placeOrder', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json',
