@@ -25,10 +25,10 @@ export default async function handler(req, res) {
     ucc: 'YIVKF'
   },
   '2': {
-    authorization: 'a3de4fd6-da0b-49bc-8f11-256b84b5ec0f',
+    authorization: 'a5b7b635-0825-47fd-8ad2-b153a8b83d20',
     neoFinKey: 'neotradeapi',
-    mobileNumber: '+917000560918',
-    ucc: 'YIVKF'
+    mobileNumber: '+919111551792',
+    ucc: 'X0VVF'
   }
 };
   const buttonType = req.headers['x-button-type'] || '1';
