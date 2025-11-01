@@ -14,8 +14,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  console.log('Received placeOrder request body:', req.body);
-  console.log('Received placeOrder request headers:', req.headers);
+  console.log('Received loginAPI request body:', req.body);
+  console.log('Received LoginAPI request headers:', req.headers);
   try {
     const { totp } = req.body;
 
