@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,9 +93,10 @@
                             <label for="totpInput" class="form-label">TOTP Code</label>
                             <input type="text" id="totpInput" class="form-control totp-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="off" />
                         </div>
-                        <button type="submit" id="loginBtn" class="btn btn--primary btn--full-width"><span>Login</span></button>
-                        
-                        <button type="submit" id="loginBtn1" class="btn btn--primary btn--full-width"><span>Login-1</span></button>
+                        <div class="form-row">
+                            <button type="button" id="loginBtn1" class="btn btn--primary"><span>Login Button 1</span></button>
+                            <button type="button" id="loginBtn2" class="btn btn--primary"><span>Login Button 2</span></button>
+                        </div>
                     </form>
                     <div id="step1Message" class="message-container"></div>
                 </div>
@@ -218,7 +220,7 @@
             const totpForm = document.getElementById('totpForm');
             const orderForm = document.getElementById('orderForm');
             const resetBtn = document.getElementById('resetBtn');
-            const loginBtn = document.getElementById('loginBtn');
+            // Login buttons handled separately
             const totpInput = document.getElementById('totpInput');
             
             function updateSessionStatus(connected) {
@@ -260,25 +262,27 @@
             }
             
             if (totpForm) {
-                totpForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
+                // Login function to handle both buttons
+                async function handleLogin(buttonNumber) {
                     const totp = totpInput.value.trim();
                     if (totp.length !== 6 || !/^\d{6}$/.test(totp)) {
                         showMessage('step1Message', 'Please enter a valid 6-digit TOTP code', 'error');
                         return;
                     }
-                    loginBtn.disabled = true;
-                    loginBtn1.disabled = true;
-                    loginBtn.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
-                    loginBtn1.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
-                     
-                    alert("buttonElement", loginBtn1);
+
+                    const activeBtn = document.getElementById('loginBtn' + buttonNumber);
+                    activeBtn.disabled = true;
+                    activeBtn.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
                     clearMessage('step1Message');
                     document.getElementById('apiStatus').textContent = 'Logging in...';
+
                     try {
                         const response = await fetch('/api/tradeApiLogin', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-Button-Type': buttonNumber.toString()
+                            },
                             body: JSON.stringify({ totp })
                         });
                         const data = await response.json();
@@ -297,10 +301,15 @@
                         showMessage('step1Message', '❌ Login failed: ' + error.message, 'error');
                         document.getElementById('apiStatus').textContent = 'Login failed';
                     } finally {
-                        loginBtn.disabled = false;
-                        loginBtn.innerHTML = '<span>Login</span>';
+                        const activeBtn = document.getElementById('loginBtn' + buttonNumber);
+                        activeBtn.disabled = false;
+                        activeBtn.innerHTML = '<span>Login Button ' + buttonNumber + '</span>';
                     }
-                });
+                }
+
+                // Add event listeners for both buttons
+                document.getElementById('loginBtn1').addEventListener('click', () => handleLogin(1));
+                document.getElementById('loginBtn2').addEventListener('click', () => handleLogin(2));
             }
             
             async function validateSession() {
