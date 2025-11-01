@@ -90,7 +90,7 @@
                     <form id="totpForm">
                         <div class="form-group">
                             <label for="totpInput" class="form-label">TOTP Code</label>
-                            <input type="text" id="totpInput"  placeholder="1:000000" maxlength="8" pattern="[0-9]{1}:[0-9]{6}" required autocomplete="off" />
+                            <input type="text" id="totpInput" class="form-control totp-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="off" />
                         </div>
                         <button type="submit" id="loginBtn" class="btn btn--primary btn--full-width"><span>Login</span></button>
                     </form>
@@ -260,10 +260,11 @@
             if (totpForm) {
                 totpForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    
                     const totp = totpInput.value.trim();
-                    alert("Enter TOTP",totp);
-                    
+                    if (totp.length !== 6 || !/^\d{6}$/.test(totp)) {
+                        showMessage('step1Message', 'Please enter a valid 6-digit TOTP code', 'error');
+                        return;
+                    }
                     loginBtn.disabled = true;
                     loginBtn.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
                     clearMessage('step1Message');
