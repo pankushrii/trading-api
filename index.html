@@ -93,6 +93,7 @@
                             <input type="text" id="totpInput" class="form-control totp-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="off" />
                         </div>
                         <button type="submit" id="loginBtn" class="btn btn--primary btn--full-width"><span>Login</span></button>
+                        
                         <button type="submit" id="loginBtn1" class="btn btn--primary btn--full-width"><span>Login-1</span></button>
                     </form>
                     <div id="step1Message" class="message-container"></div>
@@ -267,7 +268,11 @@
                         return;
                     }
                     loginBtn.disabled = true;
+                    loginBtn1.disabled = true;
                     loginBtn.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
+                    loginBtn1.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
+                     const buttonElement = accountNumber === '1' ? loginBtn1 : loginBtn2;
+                    alert("buttonElement", buttonElement);
                     clearMessage('step1Message');
                     document.getElementById('apiStatus').textContent = 'Logging in...';
                     try {
