@@ -271,8 +271,8 @@
                     loginBtn1.disabled = true;
                     loginBtn.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
                     loginBtn1.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
-                     const buttonElement = accountNumber === '1' ? loginBtn1 : loginBtn2;
-                    alert("buttonElement", buttonElement);
+                     
+                    alert("buttonElement", loginBtn1);
                     clearMessage('step1Message');
                     document.getElementById('apiStatus').textContent = 'Logging in...';
                     try {
