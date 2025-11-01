@@ -260,11 +260,10 @@
             if (totpForm) {
                 totpForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
+                    
                     const totp = totpInput.value.trim();
-                    if (totp.length !== 6 || !/^\d{6}$/.test(totp)) {
-                        showMessage('step1Message', 'Please enter a valid 6-digit TOTP code', 'error');
-                        return;
-                    }
+                    alert("Enter TOTP",totp);
+                    
                     loginBtn.disabled = true;
                     loginBtn.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
                     clearMessage('step1Message');
