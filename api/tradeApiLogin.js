@@ -16,6 +16,24 @@ export default async function handler(req, res) {
 
   console.log('Received loginAPI request body:', req.body);
   console.log('Received LoginAPI request headers:', req.headers);
+
+  const apiConfigs = {
+  '1': {
+    authorization: 'a3de4fd6-da0b-49bc-8f11-256b84b5ec0f',
+    neoFinKey: 'neotradeapi',
+    mobileNumber: '+917000560918',
+    ucc: 'YIVKF'
+  },
+  '2': {
+    authorization: 'a3de4fd6-da0b-49bc-8f11-256b84b5ec0f',
+    neoFinKey: 'neotradeapi',
+    mobileNumber: '+917000560918',
+    ucc: 'YIVKF'
+  }
+};
+  const buttonType = req.headers['x-button-type'] || '1';
+  const config = apiConfigs[buttonType];
+  
   try {
     const { totp } = req.body;
 
@@ -26,16 +44,16 @@ export default async function handler(req, res) {
     const response = await fetch('https://mis.kotaksecurities.com/login/1.0/tradeApiLogin', {
       method: 'POST',
       headers: {
-        'Authorization': 'a3de4fd6-da0b-49bc-8f11-256b84b5ec0f',
-        'neo-fin-key': 'neotradeapi',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        mobileNumber: '+917000560918',
-        ucc: 'YIVKF',
-        totp: totp
-      })
-    });
+  'Authorization': config.authorization,
+  'neo-fin-key': config.neoFinKey,
+  'Content-Type': 'application/json'
+},
+body: JSON.stringify({
+  mobileNumber: config.mobileNumber,
+  ucc: config.ucc,
+  totp: totp
+})
+        });
 
     const data = await response.json();
  // Log the response for debugging
