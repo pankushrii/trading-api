@@ -393,6 +393,7 @@
                             body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, orderData })
                         });
                         const data = await response.json();
+                        alert("Datatata",JSON.stringify(response));
                         if (!response.ok) throw new Error(data.error || data.message || 'Order placement failed');
                         console.log("data final",data);
                         alert("data:::",data);
