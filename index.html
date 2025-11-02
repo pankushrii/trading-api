@@ -154,9 +154,8 @@
                             <div class="form-group">
                                 <label class="form-label">Product Code</label>
                                 <select id="productCode" class="form-control" required>
-                                    <option value="CNC">CNC</option>
-                                    <option value="MIS">MIS</option>
                                     <option value="NRML">NRML</option>
+                                    <option value="CNC">CNC</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -179,9 +178,10 @@
                             <div class="form-group">
                                 <label class="form-label">Exchange</label>
                                 <select id="exchangeSegment" class="form-control" required>
+                                    <option value="nse_fo">NSE F&O</option>
+                                    <option value="bse_fo">BSE F&O</option>
                                     <option value="nse_cm">NSE Cash</option>
                                     <option value="bse_cm">BSE Cash</option>
-                                    <option value="nse_fo">NSE F&O</option>
                                 </select>
                             </div>
                         </div>
@@ -394,6 +394,9 @@
                         });
                         const data = await response.json();
                         if (!response.ok) throw new Error(data.error || data.message || 'Order placement failed');
+                        console.log("data final",data);
+                        alert("data:::",data);
+                        alert("data:::",JSON.stringify(data));
                         showMessage('step3Message', '✓ Order placed!<br>Order ID: ' + (data.nOrdNo || 'N/A') + '<br>Symbol: ' + orderData.tradingSymbol, 'success');
                         markSectionCompleted('step3Section', 'step3Status');
                         updateLastActivity();
