@@ -12,7 +12,25 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+ const apiConfigs = {
+  '1': {
+    authorization: 'a3de4fd6-da0b-49bc-8f11-256b84b5ec0f',
+    neoFinKey: 'neotradeapi',
+    mobileNumber: '+917000560918',
+    ucc: 'YIVKF'
+  },
+  '2': {
+    authorization: 'a5b7b635-0825-47fd-8ad2-b153a8b83d20',
+    neoFinKey: 'neotradeapi',
+    mobileNumber: '+919111551792',
+    ucc: 'X0FFV'
+  }
+};
 
+  const buttonType = req.headers['x-button-type'] || '1';
+  const config = apiConfigs[buttonType];
+
+  
   try {
     // Read from headers instead of body
     const sid = req.headers['sid'];
@@ -35,8 +53,8 @@ export default async function handler(req, res) {
     const response = await fetch('https://mis.kotaksecurities.com/login/1.0/tradeApiValidate', {
       method: 'POST',
       headers: {
-        'Authorization': 'a3de4fd6-da0b-49bc-8f11-256b84b5ec0f',
-        'neo-fin-key': 'neotradeapi',
+        'Authorization': config.authorization,
+        'neo-fin-key': config.neoFinKey,
         'sid': sid,
         'Auth': auth,
         'Content-Type': 'application/json'
