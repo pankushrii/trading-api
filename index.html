@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -270,6 +271,7 @@
                         return;
                     }
 
+                    sessionState.step1.buttonNumber = buttonNumber;
                     const activeBtn = document.getElementById('loginBtn' + buttonNumber);
                     activeBtn.disabled = true;
                     activeBtn.innerHTML = '<span class="loader"></span><span>Logging in...</span>';
@@ -301,7 +303,8 @@
                         showMessage('step1Message', '❌ Login failed: ' + error.message, 'error');
                         document.getElementById('apiStatus').textContent = 'Login failed';
                     } finally {
-                        const activeBtn = document.getElementById('loginBtn' + buttonNumber);
+                        sessionState.step1.buttonNumber = buttonNumber;
+                    const activeBtn = document.getElementById('loginBtn' + buttonNumber);
                         activeBtn.disabled = false;
                         activeBtn.innerHTML = '<span>Login Button ' + buttonNumber + '</span>';
                     }
@@ -387,9 +390,12 @@
                         console.log('[LOG] Place Order-22 sid:', sessionState.step2.auth);
                         const response = await fetch('/api/placeOrder', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json',
-                                     'sid': sessionState.step2.sid,
-                                'auth': sessionState.step2.auth },
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-Button-Type': sessionState.step1.buttonNumber.toString(),
+                                'sid': sessionState.step2.sid,
+                                'auth': sessionState.step2.auth 
+                            },
                             body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, orderData })
                         });
                         const data = await response.json();
