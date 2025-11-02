@@ -1,116 +1,98 @@
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kotak NEO Trading Terminal</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --bg-primary: #0a0e1a; --bg-secondary: #141824; --bg-card: #1a1f2e;
-            --text-primary: #e8eaed; --text-secondary: #9aa0a6;
-            --accent-primary: #4f8eff; --accent-success: #34a853;
-            --accent-error: #ea4335; --accent-warning: #fbbc04; --border-color: #2d3748;
-        }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; }
-        .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
-        .warning-banner { background: var(--accent-warning); color: #000; padding: 12px 20px; text-align: center; font-weight: 500; }
-        .header { background: var(--bg-secondary); padding: 20px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; }
-        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .header h1 { font-size: 24px; }
-        .header-status { display: flex; align-items: center; gap: 20px; }
-        .status-badge { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; }
-        .status-badge.connected { background: rgba(52, 168, 83, 0.2); color: var(--accent-success); }
-        .status-badge.disconnected { background: rgba(234, 67, 53, 0.2); color: var(--accent-error); }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .step-indicator { background: var(--bg-card); padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; }
-        .step-section { margin-bottom: 25px; transition: opacity 0.3s; }
-        .step-section.disabled { opacity: 0.5; pointer-events: none; }
-        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
-        .card__header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .card__header h2 { font-size: 20px; font-weight: 600; }
-        .step-status { font-size: 14px; color: var(--text-secondary); }
-        .card__body { padding: 25px; }
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; }
-        .form-control { width: 100%; padding: 12px 16px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 15px; transition: border-color 0.2s; }
-        .form-control:focus { outline: none; border-color: var(--accent-primary); }
-        .totp-input { font-size: 24px; text-align: center; letter-spacing: 8px; font-weight: 600; }
-        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn--primary { background: var(--accent-primary); color: white; }
-        .btn--primary:hover:not(:disabled) { background: #3d7ce3; }
-        .btn--secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
-        .btn--full-width { width: 100%; }
-        .loader { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loader-container { text-align: center; padding: 30px; }
-        .spinner { width: 40px; height: 40px; border: 4px solid var(--border-color); border-top-color: var(--accent-primary); border-radius: 50%; margin: 0 auto 15px; animation: spin 1s linear infinite; }
-        .message-container { margin-top: 20px; }
-        .message { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 14px; line-height: 1.5; }
-        .message.success { background: rgba(52,168,83,0.1); color: var(--accent-success); border: 1px solid rgba(52,168,83,0.3); }
-        .message.error { background: rgba(234,67,53,0.1); color: var(--accent-error); border: 1px solid rgba(234,67,53,0.3); }
-        .help-text { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; }
-        .footer { background: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 20px 0; margin-top: 40px; }
-        .footer-content { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
-        .footer-item { display: flex; gap: 8px; font-size: 14px; }
-        .footer-label { color: var(--text-secondary); }
-        .footer-value { font-weight: 500; }
-        @media (max-width: 768px) { .header-content { flex-direction: column; align-items: flex-start; } .form-row { grid-template-columns: 1fr; } }
-    </style>
+    <title>Trading API - Multi-Step Authentication</title>
+    <link rel="stylesheet" href="style-beautified.css">
 </head>
 <body>
-    <div class="warning-banner">⚠️ Testing Only: Hardcoded credentials for testing. Do not use in production!</div>
+    <!-- Warning Banner -->
+    <div class="warning-banner">
+        ⚠️ This application requires authentication. Ensure you have your TOTP authenticator ready.
+    </div>
+
+    <!-- Header -->
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <h1>Kotak NEO Trading Terminal</h1>
+                <div>
+                    <h1>🚀 Trading API</h1>
+                    <p style="color: var(--text-secondary); margin-top: 4px; font-size: 14px;">Multi-Step Authentication & Order Placement</p>
+                </div>
                 <div class="header-status">
-                    <div id="sessionStatus" class="status-badge disconnected">
+                    <div class="status-badge connected">
                         <span class="status-dot"></span>
-                        <span id="statusText">Disconnected</span>
+                        <span id="apiStatus">Ready</span>
                     </div>
-                    <div class="step-indicator">Step <span id="currentStep">1</span> of 3</div>
+                    <div class="step-indicator">
+                        <span id="currentStep">Step 1</span> of 3
+                    </div>
                 </div>
             </div>
         </div>
     </header>
+
+    <!-- Main Content -->
     <main class="container">
+        <!-- Step 1: TOTP Authentication -->
         <section id="step1Section" class="step-section">
             <div class="card">
                 <div class="card__header">
-                    <h2>Step 1: TOTP Authentication</h2>
+                    <div>
+                        <h2>🔐 Step 1: Authentication</h2>
+                        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 13px;">Enter your 6-digit TOTP code</p>
+                    </div>
                     <span id="step1Status" class="step-status">● In Progress</span>
                 </div>
                 <div class="card__body">
-                    <p class="help-text">Enter the 6-digit code from your authenticator app</p>
-                    <form id="totpForm">
+                    <form id="step1Form" onsubmit="handleStep1(event)">
+                        <p class="help-text">
+                            Open your authenticator app (Google Authenticator, Microsoft Authenticator, or Authy) and enter the 6-digit code below.
+                        </p>
+
                         <div class="form-group">
-                            <label for="totpInput" class="form-label">TOTP Code</label>
-                            <input type="text" id="totpInput" class="form-control totp-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="off" />
+                            <label for="totpInput" class="form-label">Authentication Code</label>
+                            <input 
+                                type="text" 
+                                id="totpInput" 
+                                class="form-control totp-input" 
+                                placeholder="000000" 
+                                maxlength="6" 
+                                pattern="[0-9]{6}" 
+                                required 
+                                autocomplete="off"
+                                inputmode="numeric"
+                            />
                         </div>
+
                         <div class="form-row">
-                            <button type="button" id="loginBtn1" class="btn btn--primary"><span>Login Button 1</span></button>
-                            <button type="button" id="loginBtn2" class="btn btn--primary"><span>Login Button 2</span></button>
+                            <button type="button" id="loginBtn1" class="btn btn--primary">
+                                <span>Login Button 1</span>
+                            </button>
+                            <button type="button" id="loginBtn2" class="btn btn--primary">
+                                <span>Login Button 2</span>
+                            </button>
                         </div>
                     </form>
                     <div id="step1Message" class="message-container"></div>
                 </div>
             </div>
         </section>
+
+        <!-- Step 2: Session Validation -->
         <section id="step2Section" class="step-section disabled">
             <div class="card">
                 <div class="card__header">
-                    <h2>Step 2: Session Validation</h2>
+                    <div>
+                        <h2>✓ Step 2: Session Validation</h2>
+                        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 13px;">Verifying your credentials</p>
+                    </div>
                     <span id="step2Status" class="step-status">● Pending</span>
                 </div>
                 <div class="card__body">
-                    <p class="help-text">Validating your session...</p>
+                    <p class="help-text">Validating your session and permissions...</p>
                     <div id="step2Loader" class="loader-container" style="display: none;">
                         <div class="spinner"></div>
                         <p>Validating session...</p>
@@ -119,102 +101,120 @@
                 </div>
             </div>
         </section>
+
+        <!-- Step 3: Place Order -->
         <section id="step3Section" class="step-section disabled">
             <div class="card">
                 <div class="card__header">
-                    <h2>Step 3: Place Order</h2>
+                    <div>
+                        <h2>📊 Step 3: Place Order</h2>
+                        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 13px;">Configure and submit your trade</p>
+                    </div>
                     <span id="step3Status" class="step-status">● Pending</span>
                 </div>
                 <div class="card__body">
-                    <p class="help-text">Fill in the order details</p>
-                    <form id="orderForm">
+                    <form id="step3Form" onsubmit="handleStep3(event)">
+                        <p class="help-text">Fill in the order details below to place your trade.</p>
+
+                        <div class="form-group">
+                            <label for="tradingSymbol" class="form-label">Trading Symbol</label>
+                            <input 
+                                type="text" 
+                                id="tradingSymbol" 
+                                class="form-control" 
+                                placeholder="e.g., NIFTY26000CE" 
+                                required
+                            />
+                        </div>
+
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Trading Symbol</label>
-                                <input type="text" id="tradingSymbol" class="form-control" placeholder="RELIANCE-EQ" required />
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input 
+                                    type="number" 
+                                    id="quantity" 
+                                    class="form-control" 
+                                    placeholder="1" 
+                                    min="1" 
+                                    value="1" 
+                                    required
+                                />
                             </div>
+
                             <div class="form-group">
-                                <label class="form-label">Transaction Type</label>
-                                <select id="transactionType" class="form-control" required>
-                                    <option value="B">Buy</option>
-                                    <option value="S">Sell</option>
+                                <label for="orderType" class="form-label">Order Type</label>
+                                <select id="orderType" class="form-control" required>
+                                    <option value="">Select Order Type</option>
+                                    <option value="BUY">Buy</option>
+                                    <option value="SELL">Sell</option>
                                 </select>
                             </div>
                         </div>
+
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Quantity</label>
-                                <input type="number" id="quantity" class="form-control" min="1" required />
+                                <label for="price" class="form-label">Price (Optional)</label>
+                                <input 
+                                    type="number" 
+                                    id="price" 
+                                    class="form-control" 
+                                    placeholder="Leave blank for market order"
+                                    step="0.01"
+                                />
                             </div>
+
                             <div class="form-group">
-                                <label class="form-label">Price</label>
-                                <input type="number" id="price" class="form-control" min="0" step="0.01" required />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Product Code</label>
-                                <select id="productCode" class="form-control" required>
-                                    <option value="NRML">NRML</option>
-                                    <option value="CNC">CNC</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Price Type</label>
-                                <select id="priceType" class="form-control" required>
-                                    <option value="MKT">Market</option>
-                                    <option value="L">Limit</option>
-                                    <option value="SL">Stop Loss</option>
+                                <label for="productType" class="form-label">Product Type</label>
+                                <select id="productType" class="form-control" required>
+                                    <option value="">Select Product</option>
+                                    <option value="MIS">Intraday (MIS)</option>
+                                    <option value="CNC">Delivery (CNC)</option>
+                                    <option value="NRML">Normal (NRML)</option>
                                 </select>
                             </div>
                         </div>
+
                         <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Validity</label>
-                                <select id="validity" class="form-control" required>
-                                    <option value="DAY">Day</option>
-                                    <option value="IOC">IOC</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Exchange</label>
-                                <select id="exchangeSegment" class="form-control" required>
-                                    <option value="nse_fo">NSE F&O</option>
-                                    <option value="bse_fo">BSE F&O</option>
-                                    <option value="nse_cm">NSE Cash</option>
-                                    <option value="bse_cm">BSE Cash</option>
-                                </select>
-                            </div>
+                            <button type="submit" class="btn btn--primary btn--full-width">
+                                <span>📤 Place Order</span>
+                            </button>
+                            <button type="reset" class="btn btn--secondary btn--full-width">
+                                <span>↺ Reset</span>
+                            </button>
                         </div>
-                        <button type="submit" id="placeOrderBtn" class="btn btn--primary btn--full-width"><span>Place Order</span></button>
                     </form>
                     <div id="step3Message" class="message-container"></div>
                 </div>
             </div>
         </section>
-        <section id="resetSection" class="step-section" style="display: none;">
-            <div class="card">
-                <div class="card__body">
-                    <button id="resetBtn" class="btn btn--secondary btn--full-width"><span>Start Over</span></button>
-                </div>
-            </div>
-        </section>
     </main>
+
+    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-item">
-                    <span class="footer-label">API Status:</span>
-                    <span id="apiStatus" class="footer-value">Ready</span>
+                    <span class="footer-label">Status</span>
+                    <span class="footer-value" id="footerStatus">Ready</span>
                 </div>
                 <div class="footer-item">
-                    <span class="footer-label">Last Activity:</span>
-                    <span id="lastActivity" class="footer-value">Never</span>
+                    <span class="footer-label">Session ID</span>
+                    <span class="footer-value" id="footerSession">---</span>
+                </div>
+                <div class="footer-item">
+                    <span class="footer-label">Last Updated</span>
+                    <span class="footer-value" id="footerTime">Just now</span>
+                </div>
+                <div class="footer-item">
+                    <span class="footer-label">Version</span>
+                    <span class="footer-value">1.0.0</span>
                 </div>
             </div>
         </div>
     </footer>
+
     <script>
+
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Kotak NEO Trading Terminal initialized');
             let sessionState = { step1: { sid: null, auth: null }, step2: { auth: null, sid: null }, currentStep: 1 };
@@ -421,7 +421,7 @@
             updateLastActivity();
             console.log('All event listeners attached successfully');
         });
+    
     </script>
-    <script src="app.js"></script>
 </body>
 </html>
