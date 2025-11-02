@@ -18,9 +18,8 @@ export default async function handler(req, res) {
     const sid = req.headers['sid'];
     const auth = req.headers['auth'] || req.headers['Auth']; // Some clients might send 'Auth' with capital A
 
-    // DEBUG: Log what we received
-    console.log('Request headers sid:', sid);
-    console.log('Request headers auth:', auth);
+  console.log('Received loginValidate request body:', req.body);
+  console.log('Received LoginValidate request headers:', req.headers);
 
     if (!sid || !auth) {
       return res.status(400).json({
