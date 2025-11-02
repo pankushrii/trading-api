@@ -324,7 +324,7 @@
                     const response = await fetch('/api/tradeApiValidate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json',
-                                  'X-Button-Type': sessionState.step1.buttonNumber.toString()
+                                  'X-Button-Type': sessionState.step1.buttonNumber.toString(),
                                   'sid': sessionState.step1.sid,
                                 'auth': sessionState.step1.auth 
                                  },
