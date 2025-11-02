@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trading API - Multi-Step Authentication</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-beautified.css">
 </head>
 <body>
     <!-- Warning Banner -->
@@ -47,35 +47,33 @@
                     <span id="step1Status" class="step-status">● In Progress</span>
                 </div>
                 <div class="card__body">
-                    <form id="step1Form" onsubmit="handleStep1(event)">
-                        <p class="help-text">
-                            Open your authenticator app (Google Authenticator, Microsoft Authenticator, or Authy) and enter the 6-digit code below.
-                        </p>
+                    <p class="help-text">
+                        Open your authenticator app (Google Authenticator, Microsoft Authenticator, or Authy) and enter the 6-digit code below.
+                    </p>
 
-                        <div class="form-group">
-                            <label for="totpInput" class="form-label">Authentication Code</label>
-                            <input 
-                                type="text" 
-                                id="totpInput" 
-                                class="form-control totp-input" 
-                                placeholder="000000" 
-                                maxlength="6" 
-                                pattern="[0-9]{6}" 
-                                required 
-                                autocomplete="off"
-                                inputmode="numeric"
-                            />
-                        </div>
+                    <div class="form-group">
+                        <label for="totpInput" class="form-label">Authentication Code</label>
+                        <input 
+                            type="text" 
+                            id="totpInput" 
+                            class="form-control totp-input" 
+                            placeholder="000000" 
+                            maxlength="6" 
+                            pattern="[0-9]{6}" 
+                            required 
+                            autocomplete="off"
+                            inputmode="numeric"
+                        />
+                    </div>
 
-                        <div class="form-row">
-                            <button type="button" id="loginBtn1" class="btn btn--primary">
-                                <span>Login Button 1</span>
-                            </button>
-                            <button type="button" id="loginBtn2" class="btn btn--primary">
-                                <span>Login Button 2</span>
-                            </button>
-                        </div>
-                    </form>
+                    <div class="form-row">
+                        <button type="button" id="loginBtn1" class="btn btn--primary">
+                            <span>Login Button 1</span>
+                        </button>
+                        <button type="button" id="loginBtn2" class="btn btn--primary">
+                            <span>Login Button 2</span>
+                        </button>
+                    </div>
                     <div id="step1Message" class="message-container"></div>
                 </div>
             </div>
@@ -113,77 +111,90 @@
                     <span id="step3Status" class="step-status">● Pending</span>
                 </div>
                 <div class="card__body">
-                    <form id="step3Form" onsubmit="handleStep3(event)">
-                        <p class="help-text">Fill in the order details below to place your trade.</p>
+                    <p class="help-text">Fill in the order details below to place your trade.</p>
 
+                    <div class="form-group">
+                        <label for="tradingSymbol" class="form-label">Trading Symbol</label>
+                        <input 
+                            type="text" 
+                            id="tradingSymbol" 
+                            class="form-control" 
+                            placeholder="e.g., NIFTY26000CE" 
+                            required
+                        />
+                    </div>
+
+                    <div class="form-row">
                         <div class="form-group">
-                            <label for="tradingSymbol" class="form-label">Trading Symbol</label>
+                            <label for="quantity" class="form-label">Quantity</label>
                             <input 
-                                type="text" 
-                                id="tradingSymbol" 
+                                type="number" 
+                                id="quantity" 
                                 class="form-control" 
-                                placeholder="e.g., NIFTY26000CE" 
+                                placeholder="1" 
+                                min="1" 
+                                value="1" 
                                 required
                             />
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="quantity" class="form-label">Quantity</label>
-                                <input 
-                                    type="number" 
-                                    id="quantity" 
-                                    class="form-control" 
-                                    placeholder="1" 
-                                    min="1" 
-                                    value="1" 
-                                    required
-                                />
-                            </div>
+                        <div class="form-group">
+                            <label for="orderType" class="form-label">Order Type</label>
+                            <select id="orderType" class="form-control" required>
+                                <option value="">Select Order Type</option>
+                                <option value="BUY">Buy</option>
+                                <option value="SELL">Sell</option>
+                            </select>
+                        </div>
+                    </div>
 
-                            <div class="form-group">
-                                <label for="orderType" class="form-label">Order Type</label>
-                                <select id="orderType" class="form-control" required>
-                                    <option value="">Select Order Type</option>
-                                    <option value="BUY">Buy</option>
-                                    <option value="SELL">Sell</option>
-                                </select>
-                            </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="price" class="form-label">Price (Optional)</label>
+                            <input 
+                                type="number" 
+                                id="price" 
+                                class="form-control" 
+                                placeholder="Leave blank for market order"
+                                step="0.01"
+                            />
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="price" class="form-label">Price (Optional)</label>
-                                <input 
-                                    type="number" 
-                                    id="price" 
-                                    class="form-control" 
-                                    placeholder="Leave blank for market order"
-                                    step="0.01"
-                                />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="productType" class="form-label">Product Type</label>
-                                <select id="productType" class="form-control" required>
-                                    <option value="">Select Product</option>
-                                    <option value="MIS">Intraday (MIS)</option>
-                                    <option value="CNC">Delivery (CNC)</option>
-                                    <option value="NRML">Normal (NRML)</option>
-                                </select>
-                            </div>
+                        <div class="form-group">
+                            <label for="productType" class="form-label">Product Type</label>
+                            <select id="productType" class="form-control" required>
+                                <option value="">Select Product</option>
+                                <option value="MIS">Intraday (MIS)</option>
+                                <option value="CNC">Delivery (CNC)</option>
+                                <option value="NRML">Normal (NRML)</option>
+                            </select>
                         </div>
+                    </div>
 
-                        <div class="form-row">
-                            <button type="submit" class="btn btn--primary btn--full-width">
-                                <span>📤 Place Order</span>
-                            </button>
-                            <button type="reset" class="btn btn--secondary btn--full-width">
-                                <span>↺ Reset</span>
-                            </button>
-                        </div>
-                    </form>
+                    <div class="form-row">
+                        <button type="button" id="placeOrderBtn" class="btn btn--primary btn--full-width">
+                            <span>📤 Place Order</span>
+                        </button>
+                        <button type="button" id="resetBtn" class="btn btn--secondary btn--full-width">
+                            <span>↺ Reset</span>
+                        </button>
+                    </div>
                     <div id="step3Message" class="message-container"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reset Section -->
+        <section id="resetSection" class="step-section" style="display: none;">
+            <div class="card">
+                <div class="card__header">
+                    <h2>🔄 Session Complete</h2>
+                </div>
+                <div class="card__body">
+                    <p class="help-text">Session completed. Click reset to start a new session.</p>
+                    <button type="button" class="btn btn--secondary btn--full-width" onclick="location.reload()">
+                        <span>↺ Start New Session</span>
+                    </button>
                 </div>
             </div>
         </section>
