@@ -1,96 +1,212 @@
 
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading API - Multi-Step Authentication</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Kotak NEO Trading Terminal</title>
+    <style>
+/* Modern Trading App UI - Enhanced Design */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Modern gradient colors */
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+
+    /* Background colors */
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #252d3d;
+    --bg-card: #1e2332;
+
+    /* Text colors */
+    --text-primary: #ffffff;
+    --text-secondary: #a8afd1;
+    --text-muted: #7a8399;
+
+    /* Accent colors */
+    --accent-primary: #667eea;
+    --accent-secondary: #764ba2;
+    --accent-success: #38ef7d;
+    --accent-error: #ff6b6b;
+    --accent-warning: #ffd93d;
+
+    /* Border & Shadow */
+    --border-color: #2d3748;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 16px 48px rgba(102, 126, 234, 0.15);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 4px; }
+
+.container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+.warning-banner { background: linear-gradient(135deg, #ffd93d, #ffa500); color: #000; padding: 14px 20px; text-align: center; font-weight: 600; font-size: 15px; }
+
+.header { background: var(--bg-secondary); padding: 25px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 40px; }
+
+.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+
+.header h1 { font-size: 28px; font-weight: 700; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+.header-status { display: flex; align-items: center; gap: 25px; }
+
+.status-badge { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 25px; font-size: 13px; font-weight: 600; background: rgba(102, 126, 234, 0.1); color: var(--accent-primary); border: 1px solid rgba(102, 126, 234, 0.2); }
+
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.step-indicator { background: var(--bg-tertiary); padding: 10px 18px; border-radius: 25px; font-size: 13px; font-weight: 600; color: var(--text-secondary); border: 1px solid var(--border-color); }
+
+.step-section { margin-bottom: 30px; animation: slideIn 0.5s ease-out; }
+
+@keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.step-section.disabled { opacity: 0.5; pointer-events: none; }
+
+.card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-md); transition: all 0.3s ease; }
+
+.card:hover { border-color: var(--accent-primary); box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15); }
+
+.card__header { padding: 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+
+.card__header h2 { font-size: 22px; font-weight: 700; }
+
+.step-status { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+
+.card__body { padding: 30px; }
+
+.form-group { margin-bottom: 24px; }
+
+.form-label { display: block; margin-bottom: 10px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.form-control { width: 100%; padding: 14px 16px; background: var(--bg-tertiary); border: 1.5px solid var(--border-color); border-radius: 12px; color: var(--text-primary); font-size: 15px; transition: all 0.3s ease; }
+
+.form-control:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+
+.totp-input { font-size: 32px; text-align: center; letter-spacing: 12px; font-weight: 700; }
+
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn--primary { background: var(--gradient-primary); color: white; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3); }
+
+.btn--primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(102, 126, 234, 0.4); }
+
+.btn--secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1.5px solid var(--border-color); }
+
+.btn--full-width { width: 100%; }
+
+.loader { width: 18px; height: 18px; border: 2.5px solid rgba(255, 255, 255, 0.2); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loader-container { text-align: center; padding: 40px 30px; }
+
+.spinner { width: 50px; height: 50px; border: 3px solid var(--border-color); border-top-color: var(--accent-primary); border-radius: 50%; margin: 0 auto 20px; animation: spin 1s linear infinite; }
+
+.message-container { margin-top: 24px; }
+
+.message { display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; border-radius: 12px; font-size: 14px; animation: slideDown 0.3s ease-out; }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+.message.success { background: rgba(56, 239, 125, 0.1); color: var(--accent-success); border: 1px solid rgba(56, 239, 125, 0.2); }
+
+.message.error { background: rgba(255, 107, 107, 0.1); color: var(--accent-error); border: 1px solid rgba(255, 107, 107, 0.2); }
+
+.help-text { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; }
+
+.footer { background: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 30px 0; margin-top: 50px; }
+
+.footer-content { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+
+.footer-item { display: flex; flex-direction: column; gap: 6px; }
+
+.footer-label { color: var(--text-muted); font-weight: 500; text-transform: uppercase; }
+
+.footer-value { color: var(--text-primary); font-weight: 700; }
+
+@media (max-width: 768px) {
+    .header-content { flex-direction: column; }
+    .form-row { grid-template-columns: 1fr; }
+    .card__body { padding: 20px; }
+}
+
+</style>
 </head>
 <body>
-    <!-- Warning Banner -->
-    <div class="warning-banner">
-        ⚠️ This application requires authentication. Ensure you have your TOTP authenticator ready.
-    </div>
-
-    <!-- Header -->
+    <div class="warning-banner">⚠️ Testing Only: Hardcoded credentials for testing. Do not use in production!</div>
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <div>
-                    <h1>🚀 Trading API</h1>
-                    <p style="color: var(--text-secondary); margin-top: 4px; font-size: 14px;">Multi-Step Authentication & Order Placement</p>
-                </div>
+                <h1>Kotak NEO Trading Terminal</h1>
                 <div class="header-status">
-                    <div class="status-badge connected">
+                    <div id="sessionStatus" class="status-badge disconnected">
                         <span class="status-dot"></span>
-                        <span id="apiStatus">Ready</span>
+                        <span id="statusText">Disconnected</span>
                     </div>
-                    <div class="step-indicator">
-                        <span id="currentStep">Step 1</span> of 3
-                    </div>
+                    <div class="step-indicator">Step <span id="currentStep">1</span> of 3</div>
                 </div>
             </div>
         </div>
     </header>
-
-    <!-- Main Content -->
     <main class="container">
-        <!-- Step 1: TOTP Authentication -->
         <section id="step1Section" class="step-section">
             <div class="card">
                 <div class="card__header">
-                    <div>
-                        <h2>🔐 Step 1: Authentication</h2>
-                        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 13px;">Enter your 6-digit TOTP code</p>
-                    </div>
+                    <h2>Step 1: TOTP Authentication</h2>
                     <span id="step1Status" class="step-status">● In Progress</span>
                 </div>
                 <div class="card__body">
-                    <p class="help-text">
-                        Open your authenticator app (Google Authenticator, Microsoft Authenticator, or Authy) and enter the 6-digit code below.
-                    </p>
-
-                    <div class="form-group">
-                        <label for="totpInput" class="form-label">Authentication Code</label>
-                        <input 
-                            type="text" 
-                            id="totpInput" 
-                            class="form-control totp-input" 
-                            placeholder="000000" 
-                            maxlength="6" 
-                            pattern="[0-9]{6}" 
-                            required 
-                            autocomplete="off"
-                            inputmode="numeric"
-                        />
-                    </div>
-
-                    <div class="form-row">
-                        <button type="button" id="loginBtn1" class="btn btn--primary">
-                            <span>Login Button 1</span>
-                        </button>
-                        <button type="button" id="loginBtn2" class="btn btn--primary">
-                            <span>Login Button 2</span>
-                        </button>
-                    </div>
+                    <p class="help-text">Enter the 6-digit code from your authenticator app</p>
+                    <form id="totpForm">
+                        <div class="form-group">
+                            <label for="totpInput" class="form-label">TOTP Code</label>
+                            <input type="text" id="totpInput" class="form-control totp-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="off" />
+                        </div>
+                        <div class="form-row">
+                            <button type="button" id="loginBtn1" class="btn btn--primary"><span>Login Button 1</span></button>
+                            <button type="button" id="loginBtn2" class="btn btn--primary"><span>Login Button 2</span></button>
+                        </div>
+                    </form>
                     <div id="step1Message" class="message-container"></div>
                 </div>
             </div>
         </section>
-
-        <!-- Step 2: Session Validation -->
         <section id="step2Section" class="step-section disabled">
             <div class="card">
                 <div class="card__header">
-                    <div>
-                        <h2>✓ Step 2: Session Validation</h2>
-                        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 13px;">Verifying your credentials</p>
-                    </div>
+                    <h2>Step 2: Session Validation</h2>
                     <span id="step2Status" class="step-status">● Pending</span>
                 </div>
                 <div class="card__body">
-                    <p class="help-text">Validating your session and permissions...</p>
+                    <p class="help-text">Validating your session...</p>
                     <div id="step2Loader" class="loader-container" style="display: none;">
                         <div class="spinner"></div>
                         <p>Validating session...</p>
@@ -99,133 +215,102 @@
                 </div>
             </div>
         </section>
-
-        <!-- Step 3: Place Order -->
         <section id="step3Section" class="step-section disabled">
             <div class="card">
                 <div class="card__header">
-                    <div>
-                        <h2>📊 Step 3: Place Order</h2>
-                        <p style="color: var(--text-secondary); margin-top: 4px; font-size: 13px;">Configure and submit your trade</p>
-                    </div>
+                    <h2>Step 3: Place Order</h2>
                     <span id="step3Status" class="step-status">● Pending</span>
                 </div>
                 <div class="card__body">
-                    <p class="help-text">Fill in the order details below to place your trade.</p>
-
-                    <div class="form-group">
-                        <label for="tradingSymbol" class="form-label">Trading Symbol</label>
-                        <input 
-                            type="text" 
-                            id="tradingSymbol" 
-                            class="form-control" 
-                            placeholder="e.g., NIFTY26000CE" 
-                            required
-                        />
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="quantity" class="form-label">Quantity</label>
-                            <input 
-                                type="number" 
-                                id="quantity" 
-                                class="form-control" 
-                                placeholder="1" 
-                                min="1" 
-                                value="1" 
-                                required
-                            />
+                    <p class="help-text">Fill in the order details</p>
+                    <form id="orderForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Trading Symbol</label>
+                                <input type="text" id="tradingSymbol" class="form-control" placeholder="RELIANCE-EQ" required />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Transaction Type</label>
+                                <select id="transactionType" class="form-control" required>
+                                    <option value="B">Buy</option>
+                                    <option value="S">Sell</option>
+                                </select>
+                            </div>
                         </div>
-
-                        <div class="form-group">
-                            <label for="orderType" class="form-label">Order Type</label>
-                            <select id="orderType" class="form-control" required>
-                                <option value="">Select Order Type</option>
-                                <option value="BUY">Buy</option>
-                                <option value="SELL">Sell</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" id="quantity" class="form-control" min="1" required />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Price</label>
+                                <input type="number" id="price" class="form-control" min="0" step="0.01" required />
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="price" class="form-label">Price (Optional)</label>
-                            <input 
-                                type="number" 
-                                id="price" 
-                                class="form-control" 
-                                placeholder="Leave blank for market order"
-                                step="0.01"
-                            />
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Product Code</label>
+                                <select id="productCode" class="form-control" required>
+                                    <option value="NRML">NRML</option>
+                                    <option value="CNC">CNC</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Price Type</label>
+                                <select id="priceType" class="form-control" required>
+                                    <option value="MKT">Market</option>
+                                    <option value="L">Limit</option>
+                                    <option value="SL">Stop Loss</option>
+                                </select>
+                            </div>
                         </div>
-
-                        <div class="form-group">
-                            <label for="productType" class="form-label">Product Type</label>
-                            <select id="productType" class="form-control" required>
-                                <option value="">Select Product</option>
-                                <option value="MIS">Intraday (MIS)</option>
-                                <option value="CNC">Delivery (CNC)</option>
-                                <option value="NRML">Normal (NRML)</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Validity</label>
+                                <select id="validity" class="form-control" required>
+                                    <option value="DAY">Day</option>
+                                    <option value="IOC">IOC</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Exchange</label>
+                                <select id="exchangeSegment" class="form-control" required>
+                                    <option value="nse_fo">NSE F&O</option>
+                                    <option value="bse_fo">BSE F&O</option>
+                                    <option value="nse_cm">NSE Cash</option>
+                                    <option value="bse_cm">BSE Cash</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="form-row">
-                        <button type="button" id="placeOrderBtn" class="btn btn--primary btn--full-width">
-                            <span>📤 Place Order</span>
-                        </button>
-                        <button type="button" id="resetBtn" class="btn btn--secondary btn--full-width">
-                            <span>↺ Reset</span>
-                        </button>
-                    </div>
+                        <button type="submit" id="placeOrderBtn" class="btn btn--primary btn--full-width"><span>Place Order</span></button>
+                    </form>
                     <div id="step3Message" class="message-container"></div>
                 </div>
             </div>
         </section>
-
-        <!-- Reset Section -->
         <section id="resetSection" class="step-section" style="display: none;">
             <div class="card">
-                <div class="card__header">
-                    <h2>🔄 Session Complete</h2>
-                </div>
                 <div class="card__body">
-                    <p class="help-text">Session completed. Click reset to start a new session.</p>
-                    <button type="button" class="btn btn--secondary btn--full-width" onclick="location.reload()">
-                        <span>↺ Start New Session</span>
-                    </button>
+                    <button id="resetBtn" class="btn btn--secondary btn--full-width"><span>Start Over</span></button>
                 </div>
             </div>
         </section>
     </main>
-
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-item">
-                    <span class="footer-label">Status</span>
-                    <span class="footer-value" id="footerStatus">Ready</span>
+                    <span class="footer-label">API Status:</span>
+                    <span id="apiStatus" class="footer-value">Ready</span>
                 </div>
                 <div class="footer-item">
-                    <span class="footer-label">Session ID</span>
-                    <span class="footer-value" id="footerSession">---</span>
-                </div>
-                <div class="footer-item">
-                    <span class="footer-label">Last Updated</span>
-                    <span class="footer-value" id="footerTime">Just now</span>
-                </div>
-                <div class="footer-item">
-                    <span class="footer-label">Version</span>
-                    <span class="footer-value">1.0.0</span>
+                    <span class="footer-label">Last Activity:</span>
+                    <span id="lastActivity" class="footer-value">Never</span>
                 </div>
             </div>
         </div>
     </footer>
-
     <script>
-
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Kotak NEO Trading Terminal initialized');
             let sessionState = { step1: { sid: null, auth: null }, step2: { auth: null, sid: null }, currentStep: 1 };
@@ -432,7 +517,7 @@
             updateLastActivity();
             console.log('All event listeners attached successfully');
         });
-    
     </script>
+    <script src="app.js"></script>
 </body>
 </html>
