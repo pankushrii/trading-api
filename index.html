@@ -398,7 +398,8 @@
                         console.log("data final",data);
                         alert("data:::",data);
                         alert("data:::",JSON.stringify(data));
-                        showMessage('step3Message', '✓ Order placed!<br>Order ID: ' + (data.nOrdNo || 'N/A') + '<br>Symbol: ' + orderData.tradingSymbol, 'success');
+                        
+                        showMessage('step3Message', '✓ Order placed!<br>Order ID: ' + (data.orderResponse.nOrdNo || 'N/A') + '<br>Symbol: ' + orderData.tradingSymbol, 'success');
                         markSectionCompleted('step3Section', 'step3Status');
                         updateLastActivity();
                         document.getElementById('apiStatus').textContent = 'Order placed';
