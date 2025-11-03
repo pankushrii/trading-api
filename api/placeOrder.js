@@ -32,9 +32,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // Build the Kotak jData object according to API spec
+    // Build the Kotak jData object
     const jData = {
-      am: 'NO', // aftermarket — NO
+      am: 'NO',
       dq: '0',
       es: orderData.exchangeSegment,
       mp: '0',
@@ -47,6 +47,15 @@ export default async function handler(req, res) {
       tp: '0',
       ts: orderData.tradingSymbol,
       tt: orderData.transactionType,
+      // Add Bracket Order fields if present
+      ...(orderData.sot && {
+        sot: orderData.sot,
+        slt: orderData.slt,
+        slv: orderData.slv,
+        sov: orderData.sov,
+        tlt: orderData.tlt,
+        tsv: orderData.tsv
+      })
     };
 
     // Encode the body as URL-encoded form data
@@ -54,7 +63,6 @@ export default async function handler(req, res) {
       jData: JSON.stringify(jData),
     }).toString();
 
-  
     console.log('Sending place order to Kotak:', {
       headers: {
         Auth: auth,
@@ -62,12 +70,9 @@ export default async function handler(req, res) {
         'neo-fin-key': 'neotradeapi',
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: formBody,
+      jData: jData,
     });
 
-    console.log('Sending place order to Kotak:', jData);
-    console.log('Sending place order to Kotak:', JSON.stringify(jData));
-    
     const kotakResponse = await fetch('https://mis.kotaksecurities.com/quick/order/rule/ms/place', {
       method: 'POST',
       headers: {
