@@ -49,6 +49,16 @@
         .order-type-btn { padding: 8px 16px; border: 2px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
         .order-type-btn:hover { border-color: var(--accent-primary); }
         .order-type-btn.active { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
+        .index-btn { padding: 8px 16px; border: 2px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; margin: 5px; }
+        .index-btn:hover { border-color: var(--accent-primary); }
+        .index-btn.active { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
+        .autocomplete-container { position: relative; width: 100%; }
+        .autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 1000; display: none; margin-top: 4px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); }
+        .autocomplete-dropdown.show { display: block; }
+        .autocomplete-option { padding: 12px 15px; cursor: pointer; color: var(--text-primary); border-bottom: 1px solid var(--border-color); transition: background 0.2s; font-size: 14px; }
+        .autocomplete-option:hover { background: rgba(79, 142, 255, 0.2); }
+        .bracket-section { display: none; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; background: rgba(79, 142, 255, 0.05); margin-bottom: 20px; }
+        .bracket-section h3 { margin-bottom: 15px; font-size: 16px; }
         .loader { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loader-container { text-align: center; padding: 30px; }
@@ -58,9 +68,6 @@
         .message.success { background: rgba(52,168,83,0.1); color: var(--accent-success); border: 1px solid rgba(52,168,83,0.3); }
         .message.error { background: rgba(234,67,53,0.1); color: var(--accent-error); border: 1px solid rgba(234,67,53,0.3); }
         .help-text { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; }
-        .bracket-section { display: none; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; background: rgba(79, 142, 255, 0.05); margin-bottom: 20px; }
-        .bracket-section h3 { margin-bottom: 15px; font-size: 16px; }
-        .bracket-section small { color: var(--text-secondary); }
         .footer { background: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 20px 0; margin-top: 40px; }
         .footer-content { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
         .footer-item { display: flex; gap: 8px; font-size: 14px; }
@@ -75,7 +82,7 @@
     </style>
 </head>
 <body>
-    <div class="warning-banner">⚠️ Testing Only: Bracket Order + Order Management. Do not use in production!</div>
+    <div class="warning-banner">⚠️ Trading Terminal - Bracket Order + Auto-Suggest + Modify Support</div>
     <header class="header">
         <div class="container">
             <div class="header-content">
@@ -131,7 +138,7 @@
             </div>
         </section>
 
-        <!-- Step 3: Place Order -->
+        <!-- Step 3: Place Order with Auto-Suggest -->
         <section id="step3Section" class="step-section disabled">
             <div class="card">
                 <div class="card__header">
@@ -154,12 +161,30 @@
                             </div>
                         </div>
 
+                        <!-- Index & Trading Symbol with Auto-Suggest -->
+                        <div class="form-group">
+                            <label class="form-label">Index & Symbol</label>
+                            
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                                <button type="button" class="index-btn active" data-index="nifty">NIFTY 50</button>
+                                <button type="button" class="index-btn" data-index="sensex">BSE SENSEX</button>
+                            </div>
+                            
+                            <div class="autocomplete-container">
+                                <input 
+                                    type="text" 
+                                    id="tradingSymbol" 
+                                    class="form-control" 
+                                    placeholder="Type symbol or focus to see list..." 
+                                    required 
+                                    autocomplete="off"
+                                />
+                                <div id="symbolDropdown" class="autocomplete-dropdown"></div>
+                            </div>
+                        </div>
+
                         <!-- Basic Order Fields -->
                         <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Trading Symbol</label>
-                                <input type="text" id="tradingSymbol" class="form-control" placeholder="RELIANCE-EQ" required />
-                            </div>
                             <div class="form-group">
                                 <label class="form-label">Transaction Type</label>
                                 <select id="transactionType" class="form-control" required>
@@ -167,18 +192,16 @@
                                     <option value="S">Sell</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Quantity</label>
                                 <input type="number" id="quantity" class="form-control" min="1" required />
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Price</label>
                                 <input type="number" id="price" class="form-control" min="0" step="0.01" required />
                             </div>
-                        </div>
-                        <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Product Code</label>
                                 <select id="productCode" class="form-control" required>
@@ -187,6 +210,8 @@
                                     <option value="NRML">NRML</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Price Type</label>
                                 <select id="priceType" class="form-control" required>
@@ -195,8 +220,6 @@
                                     <option value="SL">Stop Loss</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Validity</label>
                                 <select id="validity" class="form-control" required>
@@ -204,6 +227,8 @@
                                     <option value="IOC">IOC</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Exchange</label>
                                 <select id="exchangeSegment" class="form-control" required>
@@ -256,7 +281,7 @@
                     <span id="step4Status" class="step-status">● Pending</span>
                 </div>
                 <div class="card__body">
-                    <p class="help-text">Modify an existing order by providing the order number and new details</p>
+                    <p class="help-text">Modify an existing order</p>
                     <form id="modifyOrderForm">
                         <div class="form-group">
                             <label class="form-label">Order Number</label>
@@ -265,7 +290,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Trading Symbol</label>
-                                <input type="text" id="modifyTradingSymbol" class="form-control" placeholder="RELIANCE-EQ" required />
+                                <input type="text" id="modifyTradingSymbol" class="form-control" placeholder="Symbol" required />
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Transaction Type</label>
@@ -357,6 +382,8 @@
             console.log('Kotak NEO Trading Terminal initialized');
             let sessionState = { step1: { sid: null, auth: null }, step2: { auth: null, sid: null }, currentStep: 1 };
             let orderType = 'BO';
+            let currentIndex = 'nifty';
+            let allSymbols = { nifty: [], sensex: [] };
             
             const totpInput = document.getElementById('totpInput');
             const loginBtn1 = document.getElementById('loginBtn1');
@@ -366,7 +393,11 @@
             const resetBtn = document.getElementById('resetBtn');
             const bracketOrderSection = document.getElementById('bracketOrderSection');
             const orderTypeBtns = document.querySelectorAll('.order-type-btn');
+            const indexBtns = document.querySelectorAll('.index-btn');
+            const tradingSymbolInput = document.getElementById('tradingSymbol');
+            const symbolDropdown = document.getElementById('symbolDropdown');
             
+            // ===== UI HELPER FUNCTIONS =====
             function updateSessionStatus(connected) {
                 const statusBadge = document.getElementById('sessionStatus');
                 const statusText = document.getElementById('statusText');
@@ -410,8 +441,34 @@
                 if (sec) sec.classList.add('completed');
                 if (stat) stat.innerHTML = '<span style="color: var(--accent-success);">✓ Completed</span>';
             }
-            
-            // Login handlers
+
+            // ===== LOAD SYMBOLS FROM API =====
+            async function loadAllSymbols() {
+                alert("Loading.....");
+                try {
+                    console.log('[LOG] Loading symbols from API...');
+                    
+                    const niftyRes = await fetch('/api/getSymbols?index=nifty');
+                    const sensexRes = await fetch('/api/getSymbols?index=sensex');
+                    
+                    const niftyData = await niftyRes.json();
+                    const sensexData = await sensexRes.json();
+                    
+                    if (niftyData.success) {
+                        allSymbols.nifty = niftyData.symbols;
+                        console.log('[LOG] ✓ Loaded', niftyData.count, 'NIFTY symbols');
+                    }
+                    
+                    if (sensexData.success) {
+                        allSymbols.sensex = sensexData.symbols;
+                        console.log('[LOG] ✓ Loaded', sensexData.count, 'SENSEX symbols');
+                    }
+                } catch (error) {
+                    console.error('[ERROR] Failed to load symbols:', error);
+                }
+            }
+
+            // ===== LOGIN HANDLERS =====
             async function handleLogin(accountNumber) {
                 const totp = totpInput.value.trim();
                 if (totp.length !== 6 || !/^\d{6}$/.test(totp)) {
@@ -442,13 +499,12 @@
                     if (!response.ok) throw new Error(data.error || data.message || 'Login failed');
                     sessionState.step1.sid = data.data.sid;
                     sessionState.step1.auth = data.data.token;
-                    showMessage('step1Message', '✓ Login successful! Proceeding to validation...', 'success');
+                    showMessage('step1Message', '✓ Login successful!', 'success');
                     markSectionCompleted('step1Section', 'step1Status');
                     updateLastActivity();
                     setTimeout(() => { updateStepIndicator(2); enableSection('step2Section'); validateSession(); }, 1000);
                 } catch (error) {
                     showMessage('step1Message', '❌ Login failed: ' + error.message, 'error');
-                    document.getElementById('apiStatus').textContent = 'Login failed';
                 } finally {
                     buttonElement.disabled = false;
                     loginBtn1.disabled = false;
@@ -461,6 +517,7 @@
             if (loginBtn1) loginBtn1.addEventListener('click', () => handleLogin('1'));
             if (loginBtn2) loginBtn2.addEventListener('click', () => handleLogin('2'));
             
+            // ===== VALIDATE SESSION =====
             async function validateSession() {
                 const loader = document.getElementById('step2Loader');
                 if (loader) loader.style.display = 'block';
@@ -480,7 +537,7 @@
                     if (!response.ok) throw new Error(data.error || data.message || 'Validation failed');
                     sessionState.step2.auth = data.data.token;
                     sessionState.step2.sid = data.data.sid;
-                    showMessage('step2Message', '✓ Session validated! Ready to trade.', 'success');
+                    showMessage('step2Message', '✓ Session validated!', 'success');
                     markSectionCompleted('step2Section', 'step2Status');
                     updateSessionStatus(true);
                     updateLastActivity();
@@ -488,31 +545,99 @@
                     setTimeout(() => { updateStepIndicator(3); enableSection('step3Section'); }, 1000);
                 } catch (error) {
                     showMessage('step2Message', '❌ Validation failed: ' + error.message, 'error');
-                    document.getElementById('apiStatus').textContent = 'Validation failed';
                 } finally {
                     if (loader) loader.style.display = 'none';
                 }
             }
 
-            // Bracket Order Type Selection
+            // ===== ORDER TYPE SELECTION =====
             orderTypeBtns.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
                     orderTypeBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     orderType = btn.getAttribute('data-order-type');
-                    
-                    if (orderType === 'BO') {
-                        bracketOrderSection.style.display = 'block';
-                    } else {
-                        bracketOrderSection.style.display = 'none';
-                    }
-                    
-                    console.log('[LOG] Order type changed to:', orderType);
+                    bracketOrderSection.style.display = orderType === 'BO' ? 'block' : 'none';
+                    console.log('[LOG] Order type: ' + orderType);
                 });
             });
 
-            // Calculate BO profit/loss
+            // ===== AUTO-SUGGEST INDEX SELECTION =====
+            indexBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    indexBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentIndex = btn.getAttribute('data-index');
+                    tradingSymbolInput.value = '';
+                    symbolDropdown.innerHTML = '';
+                    symbolDropdown.classList.remove('show');
+                    console.log('[LOG] Index changed to: ' + currentIndex);
+                });
+            });
+
+            // ===== AUTO-SUGGEST FUNCTIONALITY =====
+            tradingSymbolInput.addEventListener('input', (e) => {
+                const searchValue = e.target.value.toUpperCase().trim();
+                const symbols = allSymbols[currentIndex] || [];
+                
+                if (searchValue.length === 0) {
+                    symbolDropdown.classList.remove('show');
+                    return;
+                }
+                
+                const filtered = symbols.filter(symbol => symbol.includes(searchValue));
+                
+                if (filtered.length === 0) {
+                    symbolDropdown.innerHTML = '<div class="autocomplete-option" style="color: var(--text-secondary);">No matches</div>';
+                    symbolDropdown.classList.add('show');
+                    return;
+                }
+                
+                const displayCount = Math.min(filtered.length, 15);
+                symbolDropdown.innerHTML = filtered.slice(0, displayCount).map((symbol) => `
+                    <div class="autocomplete-option" data-symbol="${symbol}">${symbol}</div>
+                `).join('');
+                
+                if (filtered.length > 15) {
+                    symbolDropdown.innerHTML += `<div class="autocomplete-option" style="color: var(--text-secondary); cursor: default; padding: 8px; text-align: center;">... and ${filtered.length - 15} more</div>`;
+                }
+                
+                symbolDropdown.classList.add('show');
+                
+                document.querySelectorAll('#symbolDropdown .autocomplete-option[data-symbol]').forEach(option => {
+                    option.addEventListener('click', () => {
+                        tradingSymbolInput.value = option.getAttribute('data-symbol');
+                        symbolDropdown.classList.remove('show');
+                    });
+                });
+            });
+
+            tradingSymbolInput.addEventListener('blur', () => {
+                setTimeout(() => symbolDropdown.classList.remove('show'), 200);
+            });
+
+            tradingSymbolInput.addEventListener('focus', () => {
+                if (tradingSymbolInput.value.length === 0) {
+                    const symbols = allSymbols[currentIndex] || [];
+                    if (symbols.length > 0) {
+                        const displayCount = Math.min(symbols.length, 10);
+                        symbolDropdown.innerHTML = symbols.slice(0, displayCount).map((symbol) => `
+                            <div class="autocomplete-option" data-symbol="${symbol}">${symbol}</div>
+                        `).join('');
+                        symbolDropdown.classList.add('show');
+                        
+                        document.querySelectorAll('#symbolDropdown .autocomplete-option[data-symbol]').forEach(option => {
+                            option.addEventListener('click', () => {
+                                tradingSymbolInput.value = option.getAttribute('data-symbol');
+                                symbolDropdown.classList.remove('show');
+                            });
+                        });
+                    }
+                }
+            });
+
+            // ===== BRACKET ORDER CALCULATION =====
             function calculateBOProfitLoss() {
                 const quantity = parseInt(document.getElementById('quantity').value) || 0;
                 const stoplossSpread = parseFloat(document.getElementById('stoplossSpread').value) || 0;
@@ -530,8 +655,8 @@
             document.getElementById('stoplossSpread').addEventListener('input', calculateBOProfitLoss);
             document.getElementById('targetSpread').addEventListener('input', calculateBOProfitLoss);
             document.getElementById('quantity').addEventListener('input', calculateBOProfitLoss);
-            
-            // Place Order Handler
+
+            // ===== PLACE ORDER =====
             if (orderForm) {
                 orderForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -547,7 +672,6 @@
                         exchangeSegment: document.getElementById('exchangeSegment').value
                     };
                     
-                    // Add BO fields if Bracket Order selected
                     if (orderType === 'BO') {
                         const stoplossSpread = parseFloat(document.getElementById('stoplossSpread').value) || 0;
                         const targetSpread = parseFloat(document.getElementById('targetSpread').value) || 0;
@@ -559,15 +683,13 @@
                         orderData.sov = 'LIMIT';
                         orderData.tlt = (buyingPrice + targetSpread).toFixed(2);
                         orderData.tsv = orderData.quantity;
-                        
-                        console.log('[LOG] BO Order Data:', orderData);
                     }
                     
                     const btn = document.getElementById('placeOrderBtn');
                     btn.disabled = true;
-                    btn.innerHTML = '<span class="loader"></span><span>Placing ' + orderType + ' Order...</span>';
+                    btn.innerHTML = '<span class="loader"></span><span>Placing Order...</span>';
                     clearMessage('step3Message');
-                    document.getElementById('apiStatus').textContent = 'Placing order...';
+                    
                     try {
                         const response = await fetch('/api/placeOrder', {
                             method: 'POST',
@@ -579,23 +701,21 @@
                             body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, orderData })
                         });
                         const data = await response.json();
-                        if (!response.ok) throw new Error(data.error || data.message || 'Order placement failed');
-                        showMessage('step3Message', '✓ ' + orderType + ' Order placed!<br>Order ID: ' + (data.nOrdNo || 'N/A') + '<br>Symbol: ' + orderData.tradingSymbol, 'success');
+                        if (!response.ok) throw new Error(data.error || 'Order placement failed');
+                        showMessage('step3Message', '✓ Order placed! Order ID: ' + (data.nOrdNo || 'N/A'), 'success');
                         markSectionCompleted('step3Section', 'step3Status');
                         updateLastActivity();
-                        document.getElementById('apiStatus').textContent = 'Order placed';
                         setTimeout(() => { updateStepIndicator(4); enableSection('step4Section'); }, 1000);
                     } catch (error) {
-                        showMessage('step3Message', '❌ Order failed: ' + error.message, 'error');
-                        document.getElementById('apiStatus').textContent = 'Order failed';
+                        showMessage('step3Message', '❌ ' + error.message, 'error');
                     } finally {
                         btn.disabled = false;
                         btn.innerHTML = '<span>Place Order</span>';
                     }
                 });
             }
-            
-            // Modify Order Handler
+
+            // ===== MODIFY ORDER =====
             if (modifyOrderForm) {
                 modifyOrderForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -614,9 +734,8 @@
                     
                     const btn = document.getElementById('modifyOrderBtn');
                     btn.disabled = true;
-                    btn.innerHTML = '<span class="loader"></span><span>Modifying Order...</span>';
+                    btn.innerHTML = '<span class="loader"></span><span>Modifying...</span>';
                     clearMessage('step4Message');
-                    document.getElementById('apiStatus').textContent = 'Modifying order...';
                     
                     try {
                         const response = await fetch('/api/modifyOrder', {
@@ -626,37 +745,34 @@
                                 'sid': sessionState.step2.sid,
                                 'auth': sessionState.step2.auth 
                             },
-                            body: JSON.stringify({ 
-                                auth: sessionState.step2.auth, 
-                                sid: sessionState.step2.sid, 
-                                orderData,
-                                orderNo 
-                            })
+                            body: JSON.stringify({ auth: sessionState.step2.auth, sid: sessionState.step2.sid, orderData, orderNo })
                         });
                         
                         const data = await response.json();
-                        if (!response.ok) throw new Error(data.error || data.message || 'Order modification failed');
+                        if (!response.ok) throw new Error(data.error || 'Modification failed');
                         
-                        showMessage('step4Message', '✓ Order modified successfully!<br>Order No: ' + orderNo, 'success');
+                        showMessage('step4Message', '✓ Order modified! Order No: ' + orderNo, 'success');
                         markSectionCompleted('step4Section', 'step4Status');
                         updateLastActivity();
-                        document.getElementById('apiStatus').textContent = 'Order modified';
                         document.getElementById('resetSection').style.display = 'block';
                     } catch (error) {
-                        showMessage('step4Message', '❌ Modify failed: ' + error.message, 'error');
-                        document.getElementById('apiStatus').textContent = 'Modify failed';
+                        showMessage('step4Message', '❌ ' + error.message, 'error');
                     } finally {
                         btn.disabled = false;
                         btn.innerHTML = '<span>Modify Order</span>';
                     }
                 });
             }
-            
+
+            // ===== RESET =====
             if (resetBtn) resetBtn.addEventListener('click', () => location.reload());
             if (totpInput) totpInput.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D/g, ''); });
+
+            // ===== INITIALIZE =====
             updateLastActivity();
             bracketOrderSection.style.display = 'block';
-            console.log('All event listeners attached successfully');
+            loadAllSymbols();
+            console.log('✓ All event listeners attached');
         });
     </script>
 </body>
