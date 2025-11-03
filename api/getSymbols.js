@@ -1,6 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-
+// /api/getSymbols.js
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,56 +13,50 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
- // Log incoming request data for debugging
-  console.log('Received getSymbol request body:', req.body);
-  console.log('Received getSymbol request headers:', req.headers);
 
   const { index } = req.query;
 
+  console.log('[LOG] getSymbols called with index:', index);
+
   try {
     let symbols = [];
-    let fileName = '';
 
+    // Hardcoded symbols - no file reading
     if (index === 'nifty') {
-      fileName = 'nifty.txt';
+      symbols = [
+        'NIFTY25N0426500CE',
+        'NIFTY25N0426600CE',
+        'NIFTY25N0426700CE',
+        'NIFTY25N0426500PE',
+        'NIFTY25N0426600PE',
+        'NIFTY25N0426700PE',
+      ];
     } else if (index === 'sensex') {
-      fileName = 'sensex.txt';
+      symbols = [
+        'SENSEX25N0685000CE',
+        'SENSEX25N0686000CE',
+        'SENSEX25N0687000CE',
+        'SENSEX25N0685000PE',
+        'SENSEX25N0687000PE',
+        'SENSEX25N0687000PE',
+      ];
     } else {
-      return res.status(400).json({ error: 'Invalid index parameter. Use "nifty" or "sensex"' });
-    }
-
-    // Read from file in public directory
-    const filePath = path.join(process.cwd(), 'public', fileName);
-    
-    console.log('[LOG] Reading symbols from:', filePath);
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      console.error('[ERROR] File not found:', filePath);
-      return res.status(404).json({ 
-        error: 'Symbol file not found',
-        file: fileName,
-        expectedPath: filePath
+      console.error('[ERROR] Invalid index:', index);
+      return res.status(400).json({ 
+        error: 'Invalid index parameter',
+        received: index,
+        expected: 'nifty or sensex'
       });
     }
 
-    // Read file contents
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    
-    // Parse symbols (split by newline and filter empty lines)
-    symbols = fileContent
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-
-    console.log(`[LOG] Loaded ${symbols.length} ${index} symbols from file`);
+    console.log(`[LOG] ✓ Returning ${symbols.length} ${index} symbols`);
 
     return res.status(200).json({
       success: true,
       index: index,
       count: symbols.length,
       symbols: symbols,
-      fileName: fileName
+      source: 'hardcoded'
     });
   } catch (error) {
     console.error('[ERROR] Error in getSymbols:', error);
