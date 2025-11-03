@@ -17,12 +17,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Log incoming request data for debugging
   console.log('Received placeOrder request body:', req.body);
   console.log('Received placeOrder request headers:', req.headers);
 
   try {
-    const { auth, sid, orderData } = req.body;
+    const { auth, sid, orderData, orderType } = req.body;
 
     if (!auth || !sid || !orderData) {
       console.error('Missing required fields in placeOrder request');
@@ -31,6 +30,9 @@ export default async function handler(req, res) {
         received: { auth: !!auth, sid: !!sid, orderData: !!orderData },
       });
     }
+
+    console.log('[LOG] Order Type:', orderType);
+    console.log('[LOG] Order Data:', orderData);
 
     // Build the Kotak jData object
     const jData = {
@@ -47,22 +49,38 @@ export default async function handler(req, res) {
       tp: '0',
       ts: orderData.tradingSymbol,
       tt: orderData.transactionType,
-      // Add Bracket Order fields if present
-        sot: "Absolute",
-        slt: "Absolute",
-        slv: orderData.slv,
-        sov: orderData.sov,
-        tlt: "N",
-        tsv: "0"
-      })
     };
+
+    // ONLY add Bracket Order fields if order type is BO
+    if (orderType === 'BO') {
+      console.log('[LOG] Adding Bracket Order fields');
+      
+      jData.sot = 'LIMIT';           // Stop order type
+      jData.slt = orderData.slt;     // Stop loss limit
+      jData.slv = orderData.slv;     // Stop loss value (quantity)
+      jData.sov = 'LIMIT';           // Stop order value type
+      jData.tlt = orderData.tlt;     // Target limit
+      jData.tsv = orderData.tsv;     // Target stop value (quantity)
+
+      console.log('[LOG] BO Fields:', {
+        sot: jData.sot,
+        slt: jData.slt,
+        slv: jData.slv,
+        sov: jData.sov,
+        tlt: jData.tlt,
+        tsv: jData.tsv
+      });
+    } else {
+      console.log('[LOG] Regular Order - No BO fields');
+    }
 
     // Encode the body as URL-encoded form data
     const formBody = new URLSearchParams({
       jData: JSON.stringify(jData),
     }).toString();
 
-    console.log('Sending place order to Kotak:', {
+    console.log('[LOG] Final jData:', jData);
+    console.log('[LOG] Sending place order to Kotak:', {
       headers: {
         Auth: auth,
         Sid: sid,
@@ -84,8 +102,7 @@ export default async function handler(req, res) {
     });
 
     const kotakData = await kotakResponse.json();
-
-    console.log('Kotak API response:', kotakData);
+    console.log('[LOG] Kotak API response:', kotakData);
 
     if (!kotakResponse.ok) {
       return res.status(kotakResponse.status).json({
@@ -99,7 +116,7 @@ export default async function handler(req, res) {
       orderResponse: kotakData,
     });
   } catch (error) {
-    console.error('Error in placeOrder:', error);
+    console.error('[ERROR] Error in placeOrder:', error);
     return res.status(500).json({
       error: 'Internal server error',
       message: error.message,
