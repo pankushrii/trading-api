@@ -1,4 +1,5 @@
-import symbols from './symbols.json' assert { type: 'json' };
+// /api/getSymbols.js
+import symbols from './symbols.json' with { type: 'json' };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -15,7 +16,10 @@ export default async function handler(req, res) {
 
   try {
     if (!index || !symbols[index]) {
-      return res.status(400).json({ error: 'Invalid index' });
+      return res.status(400).json({ 
+        error: 'Invalid index',
+        valid: Object.keys(symbols)
+      });
     }
 
     const result = symbols[index];
@@ -31,6 +35,9 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('[ERROR]', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message 
+    });
   }
 }
