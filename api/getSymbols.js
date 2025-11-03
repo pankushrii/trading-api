@@ -1,5 +1,10 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -30,12 +35,13 @@ export default async function handler(req, res) {
     const filePath = path.join(__dirname, fileName);
     
     console.log('[LOG] Reading from:', filePath);
+    console.log('[LOG] __dirname:', __dirname);
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       console.error('[ERROR] File not found:', filePath);
       
-      // Fallback to hardcoded if file doesn't exist
+      // Fallback to hardcoded
       symbols = index === 'nifty' 
         ? ['NIFTY25N0426500CE', 'NIFTY25N0426600CE', 'NIFTY25N0426700CE', 'NIFTY25N0426500PE', 'NIFTY25N0426600PE', 'NIFTY25N0426700PE']
         : ['SENSEX25N0685000CE', 'SENSEX25N0686000CE', 'SENSEX25N0687000CE', 'SENSEX25N0685000PE', 'SENSEX25N0687000PE', 'SENSEX25N0687000PE'];
