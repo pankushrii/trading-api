@@ -49,12 +49,12 @@ export default async function handler(req, res) {
       tt: orderData.transactionType,
       // Add Bracket Order fields if present
       ...(orderData.sot && {
-        sot: orderData.sot,
-        slt: orderData.slt,
+        sot: "Absolute",
+        slt: "Absolute",
         slv: orderData.slv,
         sov: orderData.sov,
-        tlt: orderData.tlt,
-        tsv: orderData.tsv
+        tlt: "N",
+        tsv: "2"
       })
     };
 
