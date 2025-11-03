@@ -15,6 +15,9 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+ // Log incoming request data for debugging
+  console.log('Received getSymbol request body:', req.body);
+  console.log('Received getSymbol request headers:', req.headers);
 
   const { index } = req.query;
 
