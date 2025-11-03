@@ -46,6 +46,9 @@
         .btn--full-width { width: 100%; }
         .btn--half-width { width: 48%; }
         .button-row { display: flex; gap: 10px; justify-content: space-between; }
+        .order-type-btn { padding: 8px 16px; border: 2px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .order-type-btn:hover { border-color: var(--accent-primary); }
+        .order-type-btn.active { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
         .loader { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loader-container { text-align: center; padding: 30px; }
@@ -55,6 +58,9 @@
         .message.success { background: rgba(52,168,83,0.1); color: var(--accent-success); border: 1px solid rgba(52,168,83,0.3); }
         .message.error { background: rgba(234,67,53,0.1); color: var(--accent-error); border: 1px solid rgba(234,67,53,0.3); }
         .help-text { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; }
+        .bracket-section { display: none; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; background: rgba(79, 142, 255, 0.05); margin-bottom: 20px; }
+        .bracket-section h3 { margin-bottom: 15px; font-size: 16px; }
+        .bracket-section small { color: var(--text-secondary); }
         .footer { background: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 20px 0; margin-top: 40px; }
         .footer-content { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
         .footer-item { display: flex; gap: 8px; font-size: 14px; }
@@ -69,7 +75,7 @@
     </style>
 </head>
 <body>
-    <div class="warning-banner">⚠️ Testing Only: Dual account login with Order Management. Do not use in production!</div>
+    <div class="warning-banner">⚠️ Testing Only: Bracket Order + Order Management. Do not use in production!</div>
     <header class="header">
         <div class="container">
             <div class="header-content">
@@ -135,6 +141,20 @@
                 <div class="card__body">
                     <p class="help-text">Fill in the order details</p>
                     <form id="orderForm">
+                        <!-- Order Type Selection -->
+                        <div class="form-group">
+                            <label class="form-label">Order Type</label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button type="button" class="order-type-btn" data-order-type="REGULAR">
+                                    <span>Regular Order</span>
+                                </button>
+                                <button type="button" class="order-type-btn active" data-order-type="BO">
+                                    <span>Bracket Order</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Basic Order Fields -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Trading Symbol</label>
@@ -193,6 +213,34 @@
                                 </select>
                             </div>
                         </div>
+
+                        <!-- Bracket Order Section -->
+                        <div id="bracketOrderSection" class="bracket-section">
+                            <h3>Bracket Order Details</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Stoploss Spread (₹)</label>
+                                    <input type="number" id="stoplossSpread" class="form-control" placeholder="5.00" step="0.01" min="0" />
+                                    <small>e.g., Rs. 5 from buying price</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Target Spread (₹)</label>
+                                    <input type="number" id="targetSpread" class="form-control" placeholder="6.00" step="0.01" min="0" />
+                                    <small>e.g., Rs. 6 from buying price</small>
+                                </div>
+                            </div>
+                            <div class="form-row" style="margin-top: 15px;">
+                                <div class="form-group">
+                                    <label class="form-label">Max Loss (Est.)</label>
+                                    <input type="text" id="maxLoss" class="form-control" readonly style="background: var(--bg-secondary);" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Max Profit (Est.)</label>
+                                    <input type="text" id="maxProfit" class="form-control" readonly style="background: var(--bg-secondary);" />
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="submit" id="placeOrderBtn" class="btn btn--primary btn--full-width"><span>Place Order</span></button>
                     </form>
                     <div id="step3Message" class="message-container"></div>
@@ -308,6 +356,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Kotak NEO Trading Terminal initialized');
             let sessionState = { step1: { sid: null, auth: null }, step2: { auth: null, sid: null }, currentStep: 1 };
+            let orderType = 'BO';
             
             const totpInput = document.getElementById('totpInput');
             const loginBtn1 = document.getElementById('loginBtn1');
@@ -315,6 +364,8 @@
             const orderForm = document.getElementById('orderForm');
             const modifyOrderForm = document.getElementById('modifyOrderForm');
             const resetBtn = document.getElementById('resetBtn');
+            const bracketOrderSection = document.getElementById('bracketOrderSection');
+            const orderTypeBtns = document.querySelectorAll('.order-type-btn');
             
             function updateSessionStatus(connected) {
                 const statusBadge = document.getElementById('sessionStatus');
@@ -360,6 +411,7 @@
                 if (stat) stat.innerHTML = '<span style="color: var(--accent-success);">✓ Completed</span>';
             }
             
+            // Login handlers
             async function handleLogin(accountNumber) {
                 const totp = totpInput.value.trim();
                 if (totp.length !== 6 || !/^\d{6}$/.test(totp)) {
@@ -406,13 +458,8 @@
                 }
             }
             
-            if (loginBtn1) {
-                loginBtn1.addEventListener('click', () => handleLogin('1'));
-            }
-            
-            if (loginBtn2) {
-                loginBtn2.addEventListener('click', () => handleLogin('2'));
-            }
+            if (loginBtn1) loginBtn1.addEventListener('click', () => handleLogin('1'));
+            if (loginBtn2) loginBtn2.addEventListener('click', () => handleLogin('2'));
             
             async function validateSession() {
                 const loader = document.getElementById('step2Loader');
@@ -446,11 +493,50 @@
                     if (loader) loader.style.display = 'none';
                 }
             }
+
+            // Bracket Order Type Selection
+            orderTypeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    orderTypeBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    orderType = btn.getAttribute('data-order-type');
+                    
+                    if (orderType === 'BO') {
+                        bracketOrderSection.style.display = 'block';
+                    } else {
+                        bracketOrderSection.style.display = 'none';
+                    }
+                    
+                    console.log('[LOG] Order type changed to:', orderType);
+                });
+            });
+
+            // Calculate BO profit/loss
+            function calculateBOProfitLoss() {
+                const quantity = parseInt(document.getElementById('quantity').value) || 0;
+                const stoplossSpread = parseFloat(document.getElementById('stoplossSpread').value) || 0;
+                const targetSpread = parseFloat(document.getElementById('targetSpread').value) || 0;
+                
+                if (quantity > 0 && (stoplossSpread > 0 || targetSpread > 0)) {
+                    const maxLoss = (stoplossSpread * quantity).toFixed(2);
+                    const maxProfit = (targetSpread * quantity).toFixed(2);
+                    
+                    document.getElementById('maxLoss').value = '₹ ' + maxLoss;
+                    document.getElementById('maxProfit').value = '₹ ' + maxProfit;
+                }
+            }
+
+            document.getElementById('stoplossSpread').addEventListener('input', calculateBOProfitLoss);
+            document.getElementById('targetSpread').addEventListener('input', calculateBOProfitLoss);
+            document.getElementById('quantity').addEventListener('input', calculateBOProfitLoss);
             
+            // Place Order Handler
             if (orderForm) {
                 orderForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const orderData = {
+                    
+                    let orderData = {
                         tradingSymbol: document.getElementById('tradingSymbol').value.trim(),
                         transactionType: document.getElementById('transactionType').value,
                         quantity: parseInt(document.getElementById('quantity').value),
@@ -461,9 +547,25 @@
                         exchangeSegment: document.getElementById('exchangeSegment').value
                     };
                     
+                    // Add BO fields if Bracket Order selected
+                    if (orderType === 'BO') {
+                        const stoplossSpread = parseFloat(document.getElementById('stoplossSpread').value) || 0;
+                        const targetSpread = parseFloat(document.getElementById('targetSpread').value) || 0;
+                        const buyingPrice = orderData.price;
+                        
+                        orderData.sot = 'LIMIT';
+                        orderData.slt = (buyingPrice - stoplossSpread).toFixed(2);
+                        orderData.slv = orderData.quantity;
+                        orderData.sov = 'LIMIT';
+                        orderData.tlt = (buyingPrice + targetSpread).toFixed(2);
+                        orderData.tsv = orderData.quantity;
+                        
+                        console.log('[LOG] BO Order Data:', orderData);
+                    }
+                    
                     const btn = document.getElementById('placeOrderBtn');
                     btn.disabled = true;
-                    btn.innerHTML = '<span class="loader"></span><span>Placing Order...</span>';
+                    btn.innerHTML = '<span class="loader"></span><span>Placing ' + orderType + ' Order...</span>';
                     clearMessage('step3Message');
                     document.getElementById('apiStatus').textContent = 'Placing order...';
                     try {
@@ -478,7 +580,7 @@
                         });
                         const data = await response.json();
                         if (!response.ok) throw new Error(data.error || data.message || 'Order placement failed');
-                        showMessage('step3Message', '✓ Order placed!<br>Order ID: ' + (data.nOrdNo || 'N/A') + '<br>Symbol: ' + orderData.tradingSymbol, 'success');
+                        showMessage('step3Message', '✓ ' + orderType + ' Order placed!<br>Order ID: ' + (data.nOrdNo || 'N/A') + '<br>Symbol: ' + orderData.tradingSymbol, 'success');
                         markSectionCompleted('step3Section', 'step3Status');
                         updateLastActivity();
                         document.getElementById('apiStatus').textContent = 'Order placed';
@@ -493,6 +595,7 @@
                 });
             }
             
+            // Modify Order Handler
             if (modifyOrderForm) {
                 modifyOrderForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -552,6 +655,7 @@
             if (resetBtn) resetBtn.addEventListener('click', () => location.reload());
             if (totpInput) totpInput.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D/g, ''); });
             updateLastActivity();
+            bracketOrderSection.style.display = 'block';
             console.log('All event listeners attached successfully');
         });
     </script>
