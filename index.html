@@ -692,7 +692,7 @@
             try {
                 const response = await fetch('/api/tradeApiLogin', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Account': `account-${account}` },
+                    headers: { 'Content-Type': 'application/json', 'x-button-type': `${account}` },
                     body: JSON.stringify({ totp })
                 });
                 const data = await response.json();
@@ -700,17 +700,17 @@
                 sessionState.auth = data.data.token;
                 sessionState.sid = data.data.sid;
                 showMessage('loginMessage', '✓ Login successful!', 'success');
-                setTimeout(() => validateSession(), 1000);
+                setTimeout(() => validateSession(account), 1000);
             } catch (error) {
                 showMessage('loginMessage', '❌ ' + error.message, 'error');
             }
         }
 
-        async function validateSession() {
+        async function validateSession(account) {
             try {
                 const response = await fetch('/api/tradeApiValidate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'sid': sessionState.sid, 'auth': sessionState.auth },
+                    headers: { 'Content-Type': 'application/json', 'sid': sessionState.sid, 'auth': sessionState.auth,'x-button-type': `${account}` },
                     body: JSON.stringify({ sid: sessionState.sid, auth: sessionState.auth })
                 });
                 const data = await response.json();
