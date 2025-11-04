@@ -41,20 +41,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid TOTP code' });
     }
 
-     console.log('[LOG] Sending Login API to Kotak:', {
-  headers: {
-    'Authorization': config.authorization,
-    'neo-fin-key': config.neoFinKey,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    mobileNumber: config.mobileNumber,
-    ucc: config.ucc,
-    totp: totp
-  })
-});
-
-
     const response = await fetch('https://mis.kotaksecurities.com/login/1.0/tradeApiLogin', {
       method: 'POST',
       headers: {
