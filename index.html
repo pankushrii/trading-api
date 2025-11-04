@@ -374,7 +374,7 @@
             try {
                 const response = await fetch('/api/tradeApiLogin', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-button-type': `account-${account}` },
+                    headers: { 'Content-Type': 'application/json', 'x-button-type': `${account}` },
                     body: JSON.stringify({ totp })
                 });
                 const data = await response.json();
