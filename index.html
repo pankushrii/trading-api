@@ -549,60 +549,124 @@
             }
         }
 
-        async function refreshPositions() {
-            try {
-                const response = await fetch('/api/getPositions', {
-                    method: 'GET',
-                    headers: {
-                        'auth': sessionState.auth,
-                        'sid': sessionState.sid
-                    }
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    renderPositions(data.positions);
-                }
-            } catch (error) {
-                console.error('Failed to load positions:', error);
+       // FIXED: Handle Kotak's exact response format
+async function refreshPositions() {
+    try {
+        console.log('[LOG] Fetching positions...');
+        
+        const response = await fetch('/api/getPositions', {
+            method: 'GET',
+            headers: {
+                'auth': sessionState.auth,
+                'sid': sessionState.sid
             }
+        });
+        
+        const data = await response.json();
+        console.log('[LOG] Full Response:', JSON.stringify(data, null, 2));
+        
+        if (!response.ok) {
+            console.error('[ERROR] API Error:', data);
+            return;
         }
 
-        function renderPositions(positions) {
-            const tbody = document.getElementById('positionsBody');
-            let totalPnL = 0;
-
-            if (!positions || positions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-secondary);">📭 No open positions</td></tr>';
-                document.getElementById('totalPnL').textContent = '₹ 0';
-                return;
-            }
-
-            tbody.innerHTML = positions.map(pos => {
-                const pnl = (pos.pnl || 0);
-                const pnlPct = (pos.pnlPct || 0);
-                totalPnL += pnl;
-
-                return `
-                    <tr>
-                        <td class="symbol-name">${pos.tradingSymbol}</td>
-                        <td class="qty">${pos.quantity}</td>
-                        <td class="qty">₹${(pos.avgPrice || 0).toFixed(2)}</td>
-                        <td class="qty">₹${(pos.ltp || 0).toFixed(2)}</td>
-                        <td class="qty ${pnl >= 0 ? 'positive' : 'negative'}">₹${pnl.toFixed(2)}</td>
-                        <td class="qty ${pnlPct >= 0 ? 'positive' : 'negative'}">${pnlPct.toFixed(2)}%</td>
-                        <td class="action-btns">
-                            <button onclick="quickOrder('${pos.tradingSymbol}', 'B')" class="btn btn-buy">Buy</button>
-                            <button onclick="quickOrder('${pos.tradingSymbol}', 'S')" class="btn btn-sell">Sell</button>
-                            <button onclick="exitPosition('${pos.tradingSymbol}', ${pos.quantity})" class="btn btn-exit">Exit</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            document.getElementById('totalPnL').textContent = '₹ ' + totalPnL.toFixed(2);
-            document.getElementById('totalPnL').className = totalPnL >= 0 ? 'positive' : 'negative';
+        // Extract positions from nested structure: data.positions.data
+        let positionsArray = [];
+        
+        if (data.positions && data.positions.data && Array.isArray(data.positions.data)) {
+            positionsArray = data.positions.data;
+        } else if (data.data && Array.isArray(data.data)) {
+            positionsArray = data.data;
         }
+
+        console.log('[LOG] Parsed positions:', positionsArray.length, 'positions');
+        renderPositions(positionsArray);
+
+    } catch (error) {
+        console.error('[ERROR] Failed to load positions:', error);
+        const tbody = document.getElementById('positionsBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--accent-error);">❌ Error: ${error.message}</td></tr>`;
+        }
+    }
+}
+
+// FIXED: Map Kotak field names to UI
+function renderPositions(positions) {
+    const tbody = document.getElementById('positionsBody');
+    if (!tbody) return;
+
+    console.log('[LOG] Rendering', positions.length, 'positions');
+
+    let totalPnL = 0;
+
+    if (!positions || positions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-secondary);">📭 No open positions</td></tr>';
+        updateTotalPnL(0);
+        return;
+    }
+
+    tbody.innerHTML = positions.map((pos, idx) => {
+        try {
+            // Map Kotak field names to our variables
+            const symbol = pos.trdSym || 'N/A';
+            const lotSize = parseInt(pos.lotSz || 1);
+            
+            // Calculate net quantity from cash flow
+            const cfBuyQty = parseInt(pos.cfBuyQty || 0);
+            const cfSellQty = parseInt(pos.cfSellQty || 0);
+            const netQty = cfBuyQty - cfSellQty;
+            
+            // Calculate average price from amounts
+            const cfBuyAmt = parseFloat(pos.cfBuyAmt || 0);
+            const cfSellAmt = parseFloat(pos.cfSellAmt || 0);
+            const avgPrice = netQty > 0 
+                ? (cfBuyAmt / (cfBuyQty || 1)) 
+                : (cfSellAmt / (cfSellQty || 1));
+            
+            // For demo: LTP = Strike Price (you'll need real LTP data)
+            const ltp = parseFloat(pos.stkPrc || avgPrice);
+            
+            // Calculate P&L
+            const pnl = (ltp - avgPrice) * netQty;
+            const pnlPct = avgPrice > 0 ? ((ltp - avgPrice) / avgPrice * 100) : 0;
+
+            console.log(`[LOG] Pos ${idx}: ${symbol} | Qty: ${netQty} | Avg: ${avgPrice.toFixed(2)} | LTP: ${ltp.toFixed(2)} | P&L: ${pnl.toFixed(2)}`);
+
+            totalPnL += pnl;
+
+            return `
+                <tr>
+                    <td class="symbol-name" title="${pos.expDt}">${symbol}</td>
+                    <td class="qty">${netQty}</td>
+                    <td class="qty">₹${avgPrice.toFixed(2)}</td>
+                    <td class="qty">₹${ltp.toFixed(2)}</td>
+                    <td class="qty ${pnl >= 0 ? 'positive' : 'negative'}">₹${pnl.toFixed(2)}</td>
+                    <td class="qty ${pnlPct >= 0 ? 'positive' : 'negative'}">${pnlPct.toFixed(2)}%</td>
+                    <td class="action-btns">
+                        <button onclick="quickOrder('${symbol}', 'B')" class="btn btn-buy" style="padding: 6px 10px; font-size: 11px;">Buy</button>
+                        <button onclick="quickOrder('${symbol}', 'S')" class="btn btn-sell" style="padding: 6px 10px; font-size: 11px;">Sell</button>
+                        <button onclick="exitPosition('${symbol}', ${Math.abs(netQty)})" class="btn btn-exit" style="padding: 6px 10px; font-size: 11px;">Exit</button>
+                    </td>
+                </tr>
+            `;
+        } catch (e) {
+            console.error('[ERROR] Error rendering position:', pos, e);
+            return '';
+        }
+    }).join('');
+
+    updateTotalPnL(totalPnL);
+}
+
+function updateTotalPnL(totalPnL) {
+    const el = document.getElementById('totalPnL');
+    if (el) {
+        el.textContent = '₹ ' + totalPnL.toFixed(2);
+        el.className = totalPnL >= 0 ? 'positive' : 'negative';
+    }
+}
+
 
         async function exitPosition(symbol, quantity) {
             if (!confirm(`Exit ${quantity} qty of ${symbol}?`)) return;
