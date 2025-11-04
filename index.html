@@ -403,7 +403,7 @@
                 document.getElementById('sessionStatus').className = 'status-badge connected';
                 document.getElementById('sessionStatus').innerHTML = '<span class="status-dot"></span><span>Connected</span>';
                 await refreshPositions();
-                setInterval(refreshPositions, 5000);
+                setInterval(refreshPositions, 150000);
             } catch (error) {
                 console.error('Validation failed:', error);
             }
