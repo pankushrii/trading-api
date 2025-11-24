@@ -814,8 +814,8 @@
   document.getElementById('totalPnL').style.color = categoryPnL.total >= 0 ? 'var(--accent-success)' : 'var(--accent-error)';
 }
 
-function renderCategoryRows(positions, categoryPnL, category) {
-  return positions.map(pos => {
+        function renderCategoryRows(positions, categoryPnL, category) {
+  return positions.map((pos, index) => {
     const cfBuyQty = parseInt(pos.cfBuyQty || 0);
     const cfSellQty = parseInt(pos.cfSellQty || 0);
     const netQty = cfBuyQty - cfSellQty;
@@ -833,6 +833,11 @@ function renderCategoryRows(positions, categoryPnL, category) {
     categoryPnL[category] += pnl;
     categoryPnL.total += pnl;
     
+    // Store position data globally with safe index
+    const posIndex = `${category}_${index}`;
+    window.positionsCache = window.positionsCache || {};
+    window.positionsCache[posIndex] = pos;
+    
     return `
       <tr>
         <td class="symbol-name">${pos.trdSym}</td>
@@ -844,12 +849,13 @@ function renderCategoryRows(positions, categoryPnL, category) {
         <td class="action-btns">
           <button onclick="quickOrder('${pos.trdSym}', 'B')" class="btn btn-buy">Buy</button>
           <button onclick="quickOrder('${pos.trdSym}', 'S')" class="btn btn-sell">Sell</button>
-          <button onclick="exitPosition('${pos.trdSym}', ${netQty}, window.positionsCache['${pos.trdSym}'])" class="btn btn-exit">Exit</button>
+          <button onclick="exitPosition('${pos.trdSym}', ${netQty}, '${posIndex}')" class="btn btn-exit">Exit</button>
         </td>
       </tr>
     `;
   }).join('');
 }
+
 
 function detectPositionType(tradingSymbol) {
   const symbol = tradingSymbol.toUpperCase();
@@ -1014,10 +1020,55 @@ async function confirmExit() {
   }
 }
 
-// Updated exitPosition function - opens modal instead of direct exit
-function exitPosition(symbol, quantity, positionData) {
+// Updated exitPosition function - now accepts posIndex instead of positionData
+function exitPosition(symbol, quantity, posIndex) {
+  // Get position data from cache using index
+  const positionData = window.positionsCache[posIndex];
+  
+  if (!positionData) {
+    console.error('[ERROR] Position data not found in cache for:', symbol, posIndex);
+    alert('Error: Position data not found. Please refresh positions.');
+    return;
+  }
+  
   openExitModal(symbol, quantity, positionData);
 }
+
+// openExitModal remains the same
+function openExitModal(symbol, quantity, positionData) {
+  currentExitPosition = positionData;
+  
+  // Detect exchange and product
+  const exchangeSegment = detectExchangeSegment(symbol);
+  const productCode = positionData ? detectProductCode(positionData) : 'NRML';
+  const transType = quantity > 0 ? 'SELL' : 'BUY';
+  const absQty = Math.abs(quantity);
+  const ltp = positionData ? parseFloat(positionData.stkPrc || 0) : 0;
+  
+  // Populate modal fields
+  document.getElementById('exitSymbol').value = symbol;
+  document.getElementById('exitAvailableQty').value = absQty;
+  document.getElementById('exitQuantity').value = absQty;
+  document.getElementById('exitQuantity').max = absQty;
+  document.getElementById('exitPrice').value = ltp.toFixed(2);
+  document.getElementById('exitPriceType').value = 'MKT';
+  document.getElementById('exitPrice').disabled = true;
+  document.getElementById('exitProductCode').value = productCode;
+  document.getElementById('exitTransType').textContent = transType;
+  document.getElementById('exitExchange').textContent = exchangeSegment.toUpperCase();
+  document.getElementById('exitLTP').textContent = ltp.toFixed(2);
+  
+  // Store quantity with sign for later use
+  document.getElementById('exitModal').dataset.originalQuantity = quantity;
+  
+  // Clear messages
+  document.getElementById('exitModalMessage').innerHTML = '';
+  
+  // Show modal
+  document.getElementById('exitModal').classList.add('show');
+}
+
+        \[-==
 
 // Helper function to show messages in modal
 function showModalMessage(id, msg, type) {
