@@ -954,5 +954,67 @@ function detectPositionType(tradingSymbol) {
             alert('Logged out!');
         }
     </script>
+    <!-- Exit Position Modal -->
+<div id="exitModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Exit Position</h3>
+      <button class="modal-close" onclick="closeExitModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="exitModalMessage"></div>
+      
+      <div class="form-group">
+        <label class="form-label">Trading Symbol</label>
+        <input type="text" id="exitSymbol" class="form-control" readonly>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Available Quantity</label>
+          <input type="number" id="exitAvailableQty" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Exit Quantity</label>
+          <input type="number" id="exitQuantity" class="form-control" min="1" step="1">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Price Type</label>
+          <select id="exitPriceType" class="form-control" onchange="toggleExitPrice()">
+            <option value="MKT">Market</option>
+            <option value="L">Limit</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price</label>
+          <input type="number" id="exitPrice" class="form-control" step="0.05" value="0" disabled>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Product Code</label>
+        <select id="exitProductCode" class="form-control">
+          <option value="NRML">NRML</option>
+          <option value="MIS">MIS</option>
+        </select>
+      </div>
+
+      <div class="info-box">
+        <p><strong>Transaction Type:</strong> <span id="exitTransType"></span></p>
+        <p><strong>Exchange:</strong> <span id="exitExchange"></span></p>
+        <p><strong>Current LTP:</strong> ₹<span id="exitLTP">0.00</span></p>
+      </div>
+
+      <button onclick="confirmExit()" class="btn-submit">
+        <span id="exitBtnText">Exit Position</span>
+        <div id="exitLoader" class="loader" style="display: none;"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
