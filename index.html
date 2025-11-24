@@ -1095,6 +1095,54 @@ document.addEventListener('keydown', function(event) {
             document.getElementById('totp').value = '';
             alert('Logged out!');
         }
+// Helper function to detect exchange segment from trading symbol
+function detectExchangeSegment(tradingSymbol) {
+  const symbol = tradingSymbol.toUpperCase();
+  
+  // F&O segments (Derivatives)
+  if (symbol.includes('NIFTY') || symbol.includes('SENSEX') || 
+      /\d{2}[A-Z]{3}\d{2}/.test(symbol)) { // Pattern like 25NOV06
+    
+    // Check if BSE
+    if (symbol.includes('SENSEX') || symbol.startsWith('BSX')) {
+      return 'bsefo';
+    }
+    
+    // Default NSE F&O
+    return 'nsefo';
+  }
+  
+  // MCX (Commodities)
+  if (symbol.includes('GOLD') || symbol.includes('SILVER') || 
+      symbol.includes('CRUDE') || symbol.includes('NATURALGAS')) {
+    return 'mcxfo';
+  }
+  
+  // Cash/Equity segments
+  if (symbol.startsWith('BSE')) {
+    return 'bsecm';
+  }
+  
+  // Default NSE Cash
+  return 'nsecm';
+}
+
+// Helper function to detect product code from position data
+function detectProductCode(pos) {
+  // If position has product field, use it
+  if (pos.prod) return pos.prod;
+  if (pos.pCode) return pos.pCode;
+  
+  // Otherwise default to NRML for F&O, MIS for others
+  const symbol = pos.trdSym.toUpperCase();
+  if (symbol.includes('NIFTY') || symbol.includes('SENSEX')) {
+    return 'NRML';
+  }
+  
+  return 'NRML'; // Default
+}
+
+        
     </script>
     <!-- Exit Position Modal -->
 <div id="exitModal" class="modal">
