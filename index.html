@@ -927,7 +927,6 @@ function exitPosition(symbol, quantity, posIndex) {
   console.log('[LOG] Opening exit modal for:', symbol, 'Quantity:', quantity);
   openExitModal(symbol, quantity, positionData);
 }
-
 // Open exit modal with position data
 function openExitModal(symbol, quantity, positionData) {
   currentExitPosition = positionData;
@@ -960,19 +959,24 @@ function openExitModal(symbol, quantity, positionData) {
   // Clear messages
   document.getElementById('exitModalMessage').innerHTML = '';
   
-  // Show modal
-  document.getElementById('exitModal').classList.add('show');
+  // Show modal - FORCE DISPLAY
+  const modal = document.getElementById('exitModal');
+  modal.classList.add('show');
+  modal.style.display = 'flex';  // ← ADD THIS LINE
+  
   console.log('[LOG] Exit modal displayed');
 }
+
 
 // Close exit modal
 function closeExitModal() {
   const modal = document.getElementById('exitModal');
   modal.classList.remove('show');
-  modal.style.display = 'none';  // ← Force hide
+  modal.style.display = 'none';  // ← ADD THIS LINE
   currentExitPosition = null;
   console.log('[LOG] Exit modal closed');
 }
+
 
 
 // Toggle price input based on price type
