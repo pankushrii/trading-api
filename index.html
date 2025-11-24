@@ -852,17 +852,24 @@ function renderCategoryRows(positions, categoryPnL, category) {
 }
 
 function detectPositionType(tradingSymbol) {
-  if (tradingSymbol.startsWith('NIFTY')) return 'nifty';
-  if (tradingSymbol.startsWith('SENSEX')) return 'sensex';
+  const symbol = tradingSymbol.toUpperCase();
+  
+  // Check for NIFTY variants (including BANKNIFTY, FINNIFTY, MIDCPNIFTY)
+  if (symbol.includes('NIFTY')) {
+    return 'nifty';
+  }
+  
+  // Check for SENSEX variants
+  if (symbol.includes('SENSEX')) {
+    return 'sensex';
+  }
+  
+  // Everything else is a stock
   return 'stocks';
 }
 
-        function detectPositionType(tradingSymbol) {
-  if (tradingSymbol.startsWith('NIFTY')) return 'nifty';
-  if (tradingSymbol.startsWith('SENSEX')) return 'sensex';
-  return 'stocks';
-}
 
+        
 
         function quickOrder(symbol, transaction) {
             document.getElementById('orderSymbol').value = symbol;
