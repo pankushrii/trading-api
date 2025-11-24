@@ -877,28 +877,170 @@ function detectPositionType(tradingSymbol) {
             switchTab('orderbook');
         }
 
-        async function exitPosition(symbol, quantity) {
-            if (!confirm(`Exit ${quantity} qty of ${symbol}?`)) return;
-            try {
-                const response = await fetch('/api/exitPosition', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        auth: sessionState.auth, 
-                        sid: sessionState.sid, 
-                        position: { tradingSymbol: symbol, quantity, exchangeSegment: 'nse_fo', productCode: 'NRML' }
-                    })
-                });
-                const data = await response.json();
-                if (data.success) { 
-                    alert('✓ Exit order placed!'); 
-                    await refreshPositions(); 
-                }
-                else alert('❌ Failed');
-            } catch (error) { 
-                alert('❌ ' + error.message); 
-            }
+       // Store current position data for exit modal
+let currentExitPosition = null;
+
+// Open exit modal with position data
+function openExitModal(symbol, quantity, positionData) {
+  currentExitPosition = positionData;
+  
+  // Detect exchange and product
+  const exchangeSegment = detectExchangeSegment(symbol);
+  const productCode = positionData ? detectProductCode(positionData) : 'NRML';
+  const transType = quantity > 0 ? 'SELL' : 'BUY';
+  const absQty = Math.abs(quantity);
+  const ltp = positionData ? parseFloat(positionData.stkPrc || 0) : 0;
+  
+  // Populate modal fields
+  document.getElementById('exitSymbol').value = symbol;
+  document.getElementById('exitAvailableQty').value = absQty;
+  document.getElementById('exitQuantity').value = absQty;
+  document.getElementById('exitQuantity').max = absQty;
+  document.getElementById('exitPrice').value = ltp.toFixed(2);
+  document.getElementById('exitPriceType').value = 'MKT';
+  document.getElementById('exitPrice').disabled = true;
+  document.getElementById('exitProductCode').value = productCode;
+  document.getElementById('exitTransType').textContent = transType;
+  document.getElementById('exitExchange').textContent = exchangeSegment.toUpperCase();
+  document.getElementById('exitLTP').textContent = ltp.toFixed(2);
+  
+  // Clear messages
+  document.getElementById('exitModalMessage').innerHTML = '';
+  
+  // Show modal
+  document.getElementById('exitModal').classList.add('show');
+}
+
+// Close exit modal
+function closeExitModal() {
+  document.getElementById('exitModal').classList.remove('show');
+  currentExitPosition = null;
+}
+
+// Toggle price input based on price type
+function toggleExitPrice() {
+  const priceType = document.getElementById('exitPriceType').value;
+  const priceInput = document.getElementById('exitPrice');
+  
+  if (priceType === 'MKT') {
+    priceInput.value = '0';
+    priceInput.disabled = true;
+  } else {
+    priceInput.disabled = false;
+    const ltp = parseFloat(document.getElementById('exitLTP').textContent);
+    priceInput.value = ltp.toFixed(2);
+    priceInput.focus();
+  }
+}
+
+// Confirm and execute exit
+async function confirmExit() {
+  const symbol = document.getElementById('exitSymbol').value;
+  const quantity = parseInt(document.getElementById('exitQuantity').value);
+  const availableQty = parseInt(document.getElementById('exitAvailableQty').value);
+  const priceType = document.getElementById('exitPriceType').value;
+  const price = priceType === 'MKT' ? '0' : document.getElementById('exitPrice').value;
+  const productCode = document.getElementById('exitProductCode').value;
+  const exchangeSegment = detectExchangeSegment(symbol);
+  
+  // Validation
+  if (!quantity || quantity <= 0) {
+    showModalMessage('exitModalMessage', 'Enter valid quantity', 'error');
+    return;
+  }
+  
+  if (quantity > availableQty) {
+    showModalMessage('exitModalMessage', `Quantity cannot exceed ${availableQty}`, 'error');
+    return;
+  }
+  
+  if (priceType === 'L' && (!price || parseFloat(price) <= 0)) {
+    showModalMessage('exitModalMessage', 'Enter valid limit price', 'error');
+    return;
+  }
+  
+  // Determine transaction type (opposite of position)
+  const transType = parseInt(document.getElementById('exitAvailableQty').value) > 0 ? 'S' : 'B';
+  
+  // Show loading
+  document.getElementById('exitBtnText').textContent = 'Placing Order...';
+  document.getElementById('exitLoader').style.display = 'inline-block';
+  document.querySelector('.btn-submit').disabled = true;
+  
+  try {
+    console.log('[LOG] Exiting position:', symbol, quantity);
+    
+    const response = await fetch('/api/exitPosition', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        auth: sessionState.auth,
+        sid: sessionState.sid,
+        position: {
+          tradingSymbol: symbol,
+          quantity: transType === 'S' ? quantity : -quantity, // Maintain sign convention
+          exchangeSegment: exchangeSegment,
+          productCode: productCode,
+          priceType: priceType,
+          price: price
         }
+      })
+    });
+
+    const data = await response.json();
+    console.log('[LOG] Exit response:', data);
+
+    if (data.success) {
+      showModalMessage('exitModalMessage', `✅ ${data.message}<br>Order ID: ${data.orderResponse.nOrdNo || 'N/A'}`, 'success');
+      
+      // Wait 2 seconds then close and refresh
+      setTimeout(async () => {
+        closeExitModal();
+        await refreshPositions();
+      }, 2000);
+    } else {
+      showModalMessage('exitModalMessage', `❌ Exit failed: ${data.error || 'Unknown error'}`, 'error');
+    }
+  } catch (error) {
+    console.error('[ERROR] Exit position failed:', error);
+    showModalMessage('exitModalMessage', `❌ Error: ${error.message}`, 'error');
+  } finally {
+    // Reset button
+    document.getElementById('exitBtnText').textContent = 'Exit Position';
+    document.getElementById('exitLoader').style.display = 'none';
+    document.querySelector('.btn-submit').disabled = false;
+  }
+}
+
+// Updated exitPosition function - opens modal instead of direct exit
+function exitPosition(symbol, quantity, positionData) {
+  openExitModal(symbol, quantity, positionData);
+}
+
+// Helper function to show messages in modal
+function showModalMessage(id, msg, type) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.innerHTML = `<div class="message ${type}">${msg}</div>`;
+  }
+}
+
+// Close modal on outside click
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('exitModal');
+  if (event.target === modal) {
+    closeExitModal();
+  }
+});
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    closeExitModal();
+  }
+});
 
         async function placeOrder() {
             const orderData = {
