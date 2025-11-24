@@ -967,10 +967,13 @@ function openExitModal(symbol, quantity, positionData) {
 
 // Close exit modal
 function closeExitModal() {
-  document.getElementById('exitModal').classList.remove('show');
+  const modal = document.getElementById('exitModal');
+  modal.classList.remove('show');
+  modal.style.display = 'none';  // ← Force hide
   currentExitPosition = null;
   console.log('[LOG] Exit modal closed');
 }
+
 
 // Toggle price input based on price type
 function toggleExitPrice() {
