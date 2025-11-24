@@ -744,39 +744,125 @@
             }
         }
 
-        function renderPositions(positions) {
-            const tbody = document.getElementById('positionsBody');
-            if (!positions || positions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-secondary);">📭 No positions</td></tr>';
-                return;
-            }
-            let totalPnL = 0;
-            tbody.innerHTML = positions.map(pos => {
-                const cfBuyQty = parseInt(pos.cfBuyQty || 0);
-                const cfSellQty = parseInt(pos.cfSellQty || 0);
-                const netQty = cfBuyQty - cfSellQty;
-                const avgPrice = netQty > 0 ? (parseFloat(pos.cfBuyAmt || 0) / (cfBuyQty || 1)) : (parseFloat(pos.cfSellAmt || 0) / (cfSellQty || 1));
-                const ltp = parseFloat(pos.stkPrc || avgPrice);
-                const pnl = (ltp - avgPrice) * netQty;
-                const pnlPct = avgPrice > 0 ? ((ltp - avgPrice) / avgPrice * 100) : 0;
-                totalPnL += pnl;
-                return `<tr>
-                    <td class="symbol-name">${pos.trdSym}</td>
-                    <td style="text-align: center;">${netQty}</td>
-                    <td style="text-align: center;">₹${avgPrice.toFixed(2)}</td>
-                    <td style="text-align: center;">₹${ltp.toFixed(2)}</td>
-                    <td style="text-align: center;" class="${pnl >= 0 ? 'positive' : 'negative'}">₹${pnl.toFixed(2)}</td>
-                    <td style="text-align: center;" class="${pnlPct >= 0 ? 'positive' : 'negative'}">${pnlPct.toFixed(2)}%</td>
-                    <td class="action-btns">
-                        <button onclick="quickOrder('${pos.trdSym}', 'B')" class="btn btn-buy">Buy</button>
-                        <button onclick="quickOrder('${pos.trdSym}', 'S')" class="btn btn-sell">Sell</button>
-                        <button onclick="exitPosition('${pos.trdSym}', ${Math.abs(netQty)})" class="btn btn-exit">Exit</button>
-                    </td>
-                </tr>`;
-            }).join('');
-            document.getElementById('totalPnL').textContent = '₹ ' + totalPnL.toFixed(2);
-            document.getElementById('totalPnL').style.color = totalPnL >= 0 ? 'var(--accent-success)' : 'var(--accent-error)';
-        }
+  function renderPositions(positions) {
+  const tbody = document.getElementById('positionsBody');
+  
+  if (!positions || positions.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-secondary);">No positions</td></tr>`;
+    return;
+  }
+
+  // Categorize positions
+  const categorized = {
+    nifty: [],
+    sensex: [],
+    stocks: []
+  };
+
+  positions.forEach(pos => {
+    const type = detectPositionType(pos.trdSym);
+    categorized[type].push(pos);
+  });
+
+  // Calculate P&L for each category
+  const categoryPnL = {
+    nifty: 0,
+    sensex: 0,
+    stocks: 0,
+    total: 0
+  };
+
+  // Build HTML with sections
+  let html = '';
+  
+  // Render NIFTY section
+  if (categorized.nifty.length > 0) {
+    html += `<tr><td colspan="7" style="background: rgba(79, 142, 255, 0.1); padding: 12px 15px; font-weight: 600; color: var(--accent-primary);">📊 NIFTY POSITIONS (${categorized.nifty.length})</td></tr>`;
+    html += renderCategoryRows(categorized.nifty, categoryPnL, 'nifty');
+  }
+
+  // Render SENSEX section
+  if (categorized.sensex.length > 0) {
+    html += `<tr><td colspan="7" style="background: rgba(251, 188, 4, 0.1); padding: 12px 15px; font-weight: 600; color: var(--accent-warning);">📈 SENSEX POSITIONS (${categorized.sensex.length})</td></tr>`;
+    html += renderCategoryRows(categorized.sensex, categoryPnL, 'sensex');
+  }
+
+  // Render STOCKS section
+  if (categorized.stocks.length > 0) {
+    html += `<tr><td colspan="7" style="background: rgba(52, 168, 83, 0.1); padding: 12px 15px; font-weight: 600; color: var(--accent-success);">💼 STOCK POSITIONS (${categorized.stocks.length})</td></tr>`;
+    html += renderCategoryRows(categorized.stocks, categoryPnL, 'stocks');
+  }
+
+  // Add summary row
+  html += `<tr style="background: var(--bg-secondary); border-top: 2px solid var(--border-color);">
+    <td colspan="4" style="font-weight: 600; padding: 15px;">TOTAL P&L</td>
+    <td style="text-align: center; font-weight: 600; font-size: 16px;" class="${categoryPnL.total >= 0 ? 'positive' : 'negative'}">₹${categoryPnL.total.toFixed(2)}</td>
+    <td style="text-align: center;">
+      <div style="font-size: 12px; color: var(--text-secondary);">
+        <div>Nifty: <span class="${categoryPnL.nifty >= 0 ? 'positive' : 'negative'}">₹${categoryPnL.nifty.toFixed(2)}</span></div>
+        <div>Sensex: <span class="${categoryPnL.sensex >= 0 ? 'positive' : 'negative'}">₹${categoryPnL.sensex.toFixed(2)}</span></div>
+        <div>Stocks: <span class="${categoryPnL.stocks >= 0 ? 'positive' : 'negative'}">₹${categoryPnL.stocks.toFixed(2)}</span></div>
+      </div>
+    </td>
+    <td></td>
+  </tr>`;
+
+  tbody.innerHTML = html;
+
+  // Update total P&L display
+  document.getElementById('totalPnL').textContent = `₹${categoryPnL.total.toFixed(2)}`;
+  document.getElementById('totalPnL').style.color = categoryPnL.total >= 0 ? 'var(--accent-success)' : 'var(--accent-error)';
+}
+
+function renderCategoryRows(positions, categoryPnL, category) {
+  return positions.map(pos => {
+    const cfBuyQty = parseInt(pos.cfBuyQty || 0);
+    const cfSellQty = parseInt(pos.cfSellQty || 0);
+    const netQty = cfBuyQty - cfSellQty;
+    
+    const avgPrice = netQty !== 0 
+      ? ((parseFloat(pos.cfBuyAmt || 0) / (cfBuyQty || 1)) + 
+         (parseFloat(pos.cfSellAmt || 0) / (cfSellQty || 1)))
+      : 0;
+    
+    const ltp = parseFloat(pos.stkPrc || avgPrice);
+    const pnl = (ltp - avgPrice) * netQty;
+    const pnlPct = avgPrice !== 0 ? ((ltp - avgPrice) / avgPrice) * 100 : 0;
+    
+    // Accumulate P&L
+    categoryPnL[category] += pnl;
+    categoryPnL.total += pnl;
+    
+    return `
+      <tr>
+        <td class="symbol-name">${pos.trdSym}</td>
+        <td style="text-align: center;">${netQty}</td>
+        <td style="text-align: center;">₹${avgPrice.toFixed(2)}</td>
+        <td style="text-align: center;">₹${ltp.toFixed(2)}</td>
+        <td style="text-align: center;" class="${pnl >= 0 ? 'positive' : 'negative'}">₹${pnl.toFixed(2)}</td>
+        <td style="text-align: center;" class="${pnlPct >= 0 ? 'positive' : 'negative'}">${pnlPct.toFixed(2)}%</td>
+        <td class="action-btns">
+          <button onclick="quickOrder('${pos.trdSym}', 'B')" class="btn btn-buy">Buy</button>
+          <button onclick="quickOrder('${pos.trdSym}', 'S')" class="btn btn-sell">Sell</button>
+          <button onclick="exitPosition('${pos.trdSym}', ${Math.abs(netQty)})" class="btn btn-exit">Exit</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function detectPositionType(tradingSymbol) {
+  if (tradingSymbol.startsWith('NIFTY')) return 'nifty';
+  if (tradingSymbol.startsWith('SENSEX')) return 'sensex';
+  return 'stocks';
+}
+
+        function detectPositionType(tradingSymbol) {
+  if (tradingSymbol.startsWith('NIFTY')) return 'nifty';
+  if (tradingSymbol.startsWith('SENSEX')) return 'sensex';
+  return 'stocks';
+}
+
 
         function quickOrder(symbol, transaction) {
             document.getElementById('orderSymbol').value = symbol;
