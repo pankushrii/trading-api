@@ -844,7 +844,7 @@ function renderCategoryRows(positions, categoryPnL, category) {
         <td class="action-btns">
           <button onclick="quickOrder('${pos.trdSym}', 'B')" class="btn btn-buy">Buy</button>
           <button onclick="quickOrder('${pos.trdSym}', 'S')" class="btn btn-sell">Sell</button>
-          <button onclick="exitPosition('${pos.trdSym}', ${Math.abs(netQty)})" class="btn btn-exit">Exit</button>
+          <button onclick="exitPosition('${pos.trdSym}', ${netQty}, window.positionsCache['${pos.trdSym}'])" class="btn btn-exit">Exit</button>
         </td>
       </tr>
     `;
