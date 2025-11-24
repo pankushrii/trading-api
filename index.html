@@ -563,215 +563,245 @@
         </div>
     </div>
 
-    <script>
-        let sessionState = { auth: null, sid: null, positions: [] };
-        let currentIndex = 'nifty';
-        let allSymbols = { nifty: [], sensex: [] };
+   <script>
+let sessionState = { auth: null, sid: null, positions: [] };
+let currentIndex = 'nifty';
+let allSymbols = { nifty: [], sensex: [] };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('[LOG] 🚀 Initializing Trading Terminal...');
-            
-            // Load symbols from API
-            loadSymbols();
-            
-            const niftyBtn = document.getElementById('niftyBtn');
-            const sensexBtn = document.getElementById('sensexBtn');
-            const symbolInput = document.getElementById('orderSymbol');
-            const symbolDropdown = document.getElementById('symbolDropdown');
-            
-            // Index button listeners
-            niftyBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                currentIndex = 'nifty';
-                niftyBtn.classList.add('active');
-                sensexBtn.classList.remove('active');
-                symbolInput.value = '';
-                symbolDropdown.classList.remove('show');
-                console.log('[LOG] ✓ Switched to NIFTY - ' + allSymbols.nifty.length + ' symbols');
-            });
-            
-            sensexBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                currentIndex = 'sensex';
-                sensexBtn.classList.add('active');
-                niftyBtn.classList.remove('active');
-                symbolInput.value = '';
-                symbolDropdown.classList.remove('show');
-                console.log('[LOG] ✓ Switched to SENSEX - ' + allSymbols.sensex.length + ' symbols');
-            });
-            
-            // Autocomplete - FREE TEXT SEARCH
-            symbolInput.addEventListener('input', function(e) {
-                const search = e.target.value.toUpperCase().trim();
-                
-                if (search.length === 0) {
-                    symbolDropdown.classList.remove('show');
-                    return;
-                }
-                
-                // FREE TEXT SEARCH - match ANY part
-                const symbols = allSymbols[currentIndex] || [];
-                const filtered = symbols.filter(s => s.includes(search));
-                
-                console.log('[LOG] Searching "' + search + '" - Found ' + filtered.length + ' matches');
-                
-                if (filtered.length === 0) {
-                    symbolDropdown.innerHTML = '<div class="autocomplete-option" style="color: var(--text-secondary); cursor: default;">❌ No matches</div>';
-                } else {
-                    symbolDropdown.innerHTML = filtered.map(s => `<div class="autocomplete-option">${s}</div>`).join('');
-                    attachOptionListeners();
-                }
-                symbolDropdown.classList.add('show');
-            });
-            
-            // Show first 10 symbols on focus
-            symbolInput.addEventListener('focus', function() {
-                if (symbolInput.value === '' && allSymbols[currentIndex].length > 0) {
-                    const symbols = allSymbols[currentIndex].slice(0, 10);
-                    symbolDropdown.innerHTML = symbols.map(s => `<div class="autocomplete-option">${s}</div>`).join('');
-                    symbolDropdown.classList.add('show');
-                    attachOptionListeners();
-                    console.log('[LOG] Showing first 10 ' + currentIndex + ' symbols');
-                }
-            });
-            
-            // Hide dropdown on blur
-            symbolInput.addEventListener('blur', function() {
-                setTimeout(() => symbolDropdown.classList.remove('show'), 200);
-            });
-        });
+// Store current position data for exit modal
+let currentExitPosition = null;
 
-        // Attach click listeners to dropdown options
-        function attachOptionListeners() {
-            document.querySelectorAll('.autocomplete-option').forEach(opt => {
-                opt.addEventListener('click', function() {
-                    document.getElementById('orderSymbol').value = this.textContent;
-                    document.getElementById('symbolDropdown').classList.remove('show');
-                    console.log('[LOG] ✓ Selected: ' + this.textContent);
-                });
-            });
-        }
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('[LOG] Initializing Trading Terminal...');
+  
+  // Load symbols from API
+  loadSymbols();
+  
+  const niftyBtn = document.getElementById('niftyBtn');
+  const sensexBtn = document.getElementById('sensexBtn');
+  const symbolInput = document.getElementById('orderSymbol');
+  const symbolDropdown = document.getElementById('symbolDropdown');
+  
+  // Index button listeners
+  niftyBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    currentIndex = 'nifty';
+    niftyBtn.classList.add('active');
+    sensexBtn.classList.remove('active');
+    symbolInput.value = '';
+    symbolDropdown.classList.remove('show');
+    console.log('[LOG] Switched to NIFTY -', allSymbols.nifty.length, 'symbols');
+  });
+  
+  sensexBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    currentIndex = 'sensex';
+    sensexBtn.classList.add('active');
+    niftyBtn.classList.remove('active');
+    symbolInput.value = '';
+    symbolDropdown.classList.remove('show');
+    console.log('[LOG] Switched to SENSEX -', allSymbols.sensex.length, 'symbols');
+  });
+  
+  // Autocomplete - FREE TEXT SEARCH
+  symbolInput.addEventListener('input', function(e) {
+    const search = e.target.value.toUpperCase().trim();
+    
+    if (search.length === 0) {
+      symbolDropdown.classList.remove('show');
+      return;
+    }
+    
+    // FREE TEXT SEARCH - match ANY part
+    const symbols = allSymbols[currentIndex];
+    const filtered = symbols.filter(s => s.includes(search));
+    
+    console.log('[LOG] Searching:', search, '- Found', filtered.length, 'matches');
+    
+    if (filtered.length === 0) {
+      symbolDropdown.innerHTML = '<div class="autocomplete-option" style="color: var(--text-secondary); cursor: default;">No matches</div>';
+    } else {
+      symbolDropdown.innerHTML = filtered.map(s => `<div class="autocomplete-option">${s}</div>`).join('');
+      attachOptionListeners();
+    }
+    
+    symbolDropdown.classList.add('show');
+  });
+  
+  // Show first 10 symbols on focus
+  symbolInput.addEventListener('focus', function() {
+    if (symbolInput.value === '' && allSymbols[currentIndex].length > 0) {
+      const symbols = allSymbols[currentIndex].slice(0, 10);
+      symbolDropdown.innerHTML = symbols.map(s => `<div class="autocomplete-option">${s}</div>`).join('');
+      symbolDropdown.classList.add('show');
+      attachOptionListeners();
+      console.log('[LOG] Showing first 10', currentIndex, 'symbols');
+    }
+  });
+  
+  // Hide dropdown on blur
+  symbolInput.addEventListener('blur', function() {
+    setTimeout(() => symbolDropdown.classList.remove('show'), 200);
+  });
+});
 
-        // LOAD SYMBOLS from API
-        async function loadSymbols() {
-            try {
-                console.log('[LOG] 📥 Loading symbols from API...');
-                
-                // Load NIFTY
-                const niftyRes = await fetch('/api/getSymbols?index=nifty');
-                const niftyData = await niftyRes.json();
-                if (niftyData.success && niftyData.symbols) {
-                    allSymbols.nifty = niftyData.symbols;
-                    console.log('[LOG] ✅ Loaded ' + allSymbols.nifty.length + ' NIFTY symbols');
-                } else {
-                    console.error('[ERROR] Failed to load NIFTY symbols:', niftyData);
-                }
+// Attach click listeners to dropdown options
+function attachOptionListeners() {
+  document.querySelectorAll('.autocomplete-option').forEach(opt => {
+    opt.addEventListener('click', function() {
+      document.getElementById('orderSymbol').value = this.textContent;
+      document.getElementById('symbolDropdown').classList.remove('show');
+      console.log('[LOG] Selected:', this.textContent);
+    });
+  });
+}
 
-                // Load SENSEX
-                const sensexRes = await fetch('/api/getSymbols?index=sensex');
-                const sensexData = await sensexRes.json();
-                if (sensexData.success && sensexData.symbols) {
-                    allSymbols.sensex = sensexData.symbols;
-                    console.log('[LOG] ✅ Loaded ' + allSymbols.sensex.length + ' SENSEX symbols');
-                } else {
-                    console.error('[ERROR] Failed to load SENSEX symbols:', sensexData);
-                }
+// LOAD SYMBOLS from API
+async function loadSymbols() {
+  try {
+    console.log('[LOG] Loading symbols from API...');
+    
+    // Load NIFTY
+    const niftyRes = await fetch('/api/getSymbols?index=nifty');
+    const niftyData = await niftyRes.json();
+    if (niftyData.success && niftyData.symbols) {
+      allSymbols.nifty = niftyData.symbols;
+      console.log('[LOG] Loaded', allSymbols.nifty.length, 'NIFTY symbols');
+    } else {
+      console.error('[ERROR] Failed to load NIFTY symbols', niftyData);
+    }
+    
+    // Load SENSEX
+    const sensexRes = await fetch('/api/getSymbols?index=sensex');
+    const sensexData = await sensexRes.json();
+    if (sensexData.success && sensexData.symbols) {
+      allSymbols.sensex = sensexData.symbols;
+      console.log('[LOG] Loaded', allSymbols.sensex.length, 'SENSEX symbols');
+    } else {
+      console.error('[ERROR] Failed to load SENSEX symbols', sensexData);
+    }
+    
+    console.log('[LOG] Total symbols loaded:', allSymbols.nifty.length + allSymbols.sensex.length);
+  } catch (error) {
+    console.error('[ERROR] Failed to load symbols', error);
+  }
+}
 
-                console.log('[LOG] 📊 Total symbols loaded:', allSymbols.nifty.length + allSymbols.sensex.length);
-            } catch (error) {
-                console.error('[ERROR] Failed to load symbols:', error);
-            }
-        }
+async function login(account) {
+  const totp = document.getElementById('totp').value.trim();
+  
+  if (!/^\d{6}$/.test(totp)) {
+    showMessage('loginMessage', 'Enter 6-digit code', 'error');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/tradeApiLogin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-button-type': account
+      },
+      body: JSON.stringify({ totp })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error);
+    }
+    
+    sessionState.auth = data.data.token;
+    sessionState.sid = data.data.sid;
+    
+    showMessage('loginMessage', '✅ Login successful!', 'success');
+    setTimeout(() => validateSession(account), 1000);
+  } catch (error) {
+    showMessage('loginMessage', `❌ ${error.message}`, 'error');
+  }
+}
 
-        async function login(account) {
-            const totp = document.getElementById('totp').value.trim();
-            if (!/^\d{6}$/.test(totp)) {
-                showMessage('loginMessage', '❌ Enter 6-digit code', 'error');
-                return;
-            }
-            try {
-                const response = await fetch('/api/tradeApiLogin', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-button-type': `${account}` },
-                    body: JSON.stringify({ totp })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error);
-                sessionState.auth = data.data.token;
-                sessionState.sid = data.data.sid;
-                showMessage('loginMessage', '✓ Login successful!', 'success');
-                setTimeout(() => validateSession(account), 1000);
-            } catch (error) {
-                showMessage('loginMessage', '❌ ' + error.message, 'error');
-            }
-        }
+async function validateSession(account) {
+  try {
+    const response = await fetch('/api/tradeApiValidate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'sid': sessionState.sid,
+        'auth': sessionState.auth,
+        'x-button-type': account
+      },
+      body: JSON.stringify({
+        sid: sessionState.sid,
+        auth: sessionState.auth
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error);
+    }
+    
+    sessionState.auth = data.data.token;
+    sessionState.sid = data.data.sid;
+    
+    document.getElementById('loginSection').classList.remove('active');
+    document.getElementById('tradingSection').classList.add('active');
+    document.getElementById('sessionStatus').className = 'status-badge connected';
+    document.getElementById('sessionStatus').innerHTML = '<span class="status-dot"></span><span>Connected</span>';
+    
+    await refreshPositions();
+    setInterval(refreshPositions, 30000);
+  } catch (error) {
+    console.error('Validation failed', error);
+  }
+}
 
-        async function validateSession(account) {
-            try {
-                const response = await fetch('/api/tradeApiValidate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'sid': sessionState.sid, 'auth': sessionState.auth,'x-button-type': `${account}` },
-                    body: JSON.stringify({ sid: sessionState.sid, auth: sessionState.auth })
-                });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error);
-                sessionState.auth = data.data.token;
-                sessionState.sid = data.data.sid;
-                document.getElementById('loginSection').classList.remove('active');
-                document.getElementById('tradingSection').classList.add('active');
-                document.getElementById('sessionStatus').className = 'status-badge connected';
-                document.getElementById('sessionStatus').innerHTML = '<span class="status-dot"></span><span>Connected</span>';
-                await refreshPositions();
-                setInterval(refreshPositions, 30000);
-            } catch (error) {
-                console.error('Validation failed:', error);
-            }
-        }
+async function refreshPositions() {
+  try {
+    const response = await fetch('/api/getPositions', {
+      method: 'GET',
+      headers: {
+        'auth': sessionState.auth,
+        'sid': sessionState.sid
+      }
+    });
+    
+    const data = await response.json();
+    
+    let positionsArray;
+    if (data.positions && data.positions.data) {
+      positionsArray = data.positions.data;
+    } else if (data.data) {
+      positionsArray = data.data;
+    }
+    
+    renderPositions(positionsArray);
+  } catch (error) {
+    console.error('Failed to load positions', error);
+  }
+}
 
-        async function refreshPositions() {
-            try {
-                const response = await fetch('/api/getPositions', { 
-                    method: 'GET', 
-                    headers: { 'auth': sessionState.auth, 'sid': sessionState.sid }
-                });
-                const data = await response.json();
-                let positionsArray = [];
-                if (data.positions && data.positions.data) positionsArray = data.positions.data;
-                else if (data.data) positionsArray = data.data;
-                renderPositions(positionsArray);
-            } catch (error) {
-                console.error('Failed to load positions:', error);
-            }
-        }
-
-  function renderPositions(positions) {
+function renderPositions(positions) {
   const tbody = document.getElementById('positionsBody');
   
   if (!positions || positions.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-secondary);">No positions</td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-secondary);">No positions</td></tr>';
     return;
   }
-
+  
   // Categorize positions
-  const categorized = {
-    nifty: [],
-    sensex: [],
-    stocks: []
-  };
-
+  const categorized = { nifty: [], sensex: [], stocks: [] };
+  
   positions.forEach(pos => {
     const type = detectPositionType(pos.trdSym);
     categorized[type].push(pos);
   });
-
+  
   // Calculate P&L for each category
-  const categoryPnL = {
-    nifty: 0,
-    sensex: 0,
-    stocks: 0,
-    total: 0
-  };
-
+  const categoryPnL = { nifty: 0, sensex: 0, stocks: 0, total: 0 };
+  
   // Build HTML with sections
   let html = '';
   
@@ -780,19 +810,19 @@
     html += `<tr><td colspan="7" style="background: rgba(79, 142, 255, 0.1); padding: 12px 15px; font-weight: 600; color: var(--accent-primary);">📊 NIFTY POSITIONS (${categorized.nifty.length})</td></tr>`;
     html += renderCategoryRows(categorized.nifty, categoryPnL, 'nifty');
   }
-
+  
   // Render SENSEX section
   if (categorized.sensex.length > 0) {
     html += `<tr><td colspan="7" style="background: rgba(251, 188, 4, 0.1); padding: 12px 15px; font-weight: 600; color: var(--accent-warning);">📈 SENSEX POSITIONS (${categorized.sensex.length})</td></tr>`;
     html += renderCategoryRows(categorized.sensex, categoryPnL, 'sensex');
   }
-
+  
   // Render STOCKS section
   if (categorized.stocks.length > 0) {
     html += `<tr><td colspan="7" style="background: rgba(52, 168, 83, 0.1); padding: 12px 15px; font-weight: 600; color: var(--accent-success);">💼 STOCK POSITIONS (${categorized.stocks.length})</td></tr>`;
     html += renderCategoryRows(categorized.stocks, categoryPnL, 'stocks');
   }
-
+  
   // Add summary row
   html += `<tr style="background: var(--bg-secondary); border-top: 2px solid var(--border-color);">
     <td colspan="4" style="font-weight: 600; padding: 15px;">TOTAL P&L</td>
@@ -806,15 +836,18 @@
     </td>
     <td></td>
   </tr>`;
-
+  
   tbody.innerHTML = html;
-
+  
   // Update total P&L display
   document.getElementById('totalPnL').textContent = `₹${categoryPnL.total.toFixed(2)}`;
   document.getElementById('totalPnL').style.color = categoryPnL.total >= 0 ? 'var(--accent-success)' : 'var(--accent-error)';
 }
 
-        function renderCategoryRows(positions, categoryPnL, category) {
+function renderCategoryRows(positions, categoryPnL, category) {
+  // Initialize cache if it doesn't exist
+  window.positionsCache = window.positionsCache || {};
+  
   return positions.map((pos, index) => {
     const cfBuyQty = parseInt(pos.cfBuyQty || 0);
     const cfSellQty = parseInt(pos.cfSellQty || 0);
@@ -835,7 +868,6 @@
     
     // Store position data globally with safe index
     const posIndex = `${category}_${index}`;
-    window.positionsCache = window.positionsCache || {};
     window.positionsCache[posIndex] = pos;
     
     return `
@@ -856,7 +888,6 @@
   }).join('');
 }
 
-
 function detectPositionType(tradingSymbol) {
   const symbol = tradingSymbol.toUpperCase();
   
@@ -874,17 +905,28 @@ function detectPositionType(tradingSymbol) {
   return 'stocks';
 }
 
+function quickOrder(symbol, transaction) {
+  document.getElementById('orderSymbol').value = symbol;
+  document.getElementById('orderTransaction').value = transaction;
+  switchTab('orderbook');
+}
 
-        
+// EXIT POSITION FUNCTIONS
 
-        function quickOrder(symbol, transaction) {
-            document.getElementById('orderSymbol').value = symbol;
-            document.getElementById('orderTransaction').value = transaction;
-            switchTab('orderbook');
-        }
-
-       // Store current position data for exit modal
-let currentExitPosition = null;
+// Updated exitPosition function - accepts posIndex
+function exitPosition(symbol, quantity, posIndex) {
+  // Get position data from cache using index
+  const positionData = window.positionsCache[posIndex];
+  
+  if (!positionData) {
+    console.error('[ERROR] Position data not found in cache for:', symbol, posIndex);
+    alert('Error: Position data not found. Please refresh positions.');
+    return;
+  }
+  
+  console.log('[LOG] Opening exit modal for:', symbol, 'Quantity:', quantity);
+  openExitModal(symbol, quantity, positionData);
+}
 
 // Open exit modal with position data
 function openExitModal(symbol, quantity, positionData) {
@@ -896,6 +938,8 @@ function openExitModal(symbol, quantity, positionData) {
   const transType = quantity > 0 ? 'SELL' : 'BUY';
   const absQty = Math.abs(quantity);
   const ltp = positionData ? parseFloat(positionData.stkPrc || 0) : 0;
+  
+  console.log('[LOG] Exit modal data:', { symbol, quantity, absQty, transType, ltp, exchangeSegment, productCode });
   
   // Populate modal fields
   document.getElementById('exitSymbol').value = symbol;
@@ -910,17 +954,22 @@ function openExitModal(symbol, quantity, positionData) {
   document.getElementById('exitExchange').textContent = exchangeSegment.toUpperCase();
   document.getElementById('exitLTP').textContent = ltp.toFixed(2);
   
+  // Store quantity with sign for later use
+  document.getElementById('exitModal').dataset.originalQuantity = quantity;
+  
   // Clear messages
   document.getElementById('exitModalMessage').innerHTML = '';
   
   // Show modal
   document.getElementById('exitModal').classList.add('show');
+  console.log('[LOG] Exit modal displayed');
 }
 
 // Close exit modal
 function closeExitModal() {
   document.getElementById('exitModal').classList.remove('show');
   currentExitPosition = null;
+  console.log('[LOG] Exit modal closed');
 }
 
 // Toggle price input based on price type
@@ -986,7 +1035,7 @@ async function confirmExit() {
         sid: sessionState.sid,
         position: {
           tradingSymbol: symbol,
-          quantity: transType === 'S' ? quantity : -quantity, // Maintain sign convention
+          quantity: transType === 'S' ? quantity : -quantity,
           exchangeSegment: exchangeSegment,
           productCode: productCode,
           priceType: priceType,
@@ -1020,54 +1069,6 @@ async function confirmExit() {
   }
 }
 
-// Updated exitPosition function - now accepts posIndex instead of positionData
-function exitPosition(symbol, quantity, posIndex) {
-  // Get position data from cache using index
-  const positionData = window.positionsCache[posIndex];
-  
-  if (!positionData) {
-    console.error('[ERROR] Position data not found in cache for:', symbol, posIndex);
-    alert('Error: Position data not found. Please refresh positions.');
-    return;
-  }
-  
-  openExitModal(symbol, quantity, positionData);
-}
-
-// openExitModal remains the same
-function openExitModal(symbol, quantity, positionData) {
-  currentExitPosition = positionData;
-  
-  // Detect exchange and product
-  const exchangeSegment = detectExchangeSegment(symbol);
-  const productCode = positionData ? detectProductCode(positionData) : 'NRML';
-  const transType = quantity > 0 ? 'SELL' : 'BUY';
-  const absQty = Math.abs(quantity);
-  const ltp = positionData ? parseFloat(positionData.stkPrc || 0) : 0;
-  
-  // Populate modal fields
-  document.getElementById('exitSymbol').value = symbol;
-  document.getElementById('exitAvailableQty').value = absQty;
-  document.getElementById('exitQuantity').value = absQty;
-  document.getElementById('exitQuantity').max = absQty;
-  document.getElementById('exitPrice').value = ltp.toFixed(2);
-  document.getElementById('exitPriceType').value = 'MKT';
-  document.getElementById('exitPrice').disabled = true;
-  document.getElementById('exitProductCode').value = productCode;
-  document.getElementById('exitTransType').textContent = transType;
-  document.getElementById('exitExchange').textContent = exchangeSegment.toUpperCase();
-  document.getElementById('exitLTP').textContent = ltp.toFixed(2);
-  
-  // Store quantity with sign for later use
-  document.getElementById('exitModal').dataset.originalQuantity = quantity;
-  
-  // Clear messages
-  document.getElementById('exitModalMessage').innerHTML = '';
-  
-  // Show modal
-  document.getElementById('exitModal').classList.add('show');
-}
-
 // Helper function to show messages in modal
 function showModalMessage(id, msg, type) {
   const el = document.getElementById(id);
@@ -1091,72 +1092,16 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
-        async function placeOrder() {
-            const orderData = {
-                tradingSymbol: document.getElementById('orderSymbol').value,
-                transactionType: document.getElementById('orderTransaction').value,
-                quantity: parseInt(document.getElementById('orderQuantity').value),
-                price: parseFloat(document.getElementById('orderPrice').value),
-                productCode: document.getElementById('orderProduct').value,
-                priceType: document.getElementById('orderPriceType').value,
-                validity: 'DAY',
-                exchangeSegment: document.getElementById('orderExchange').value
-            };
-            
-            console.log('[LOG] Placing order:', orderData);
-            
-            try {
-                const response = await fetch('/api/placeOrder', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'sid': sessionState.sid, 'auth': sessionState.auth },
-                    body: JSON.stringify({ auth: sessionState.auth, sid: sessionState.sid, orderData, orderType: 'REGULAR' })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    showMessage('orderMessage', '✓ Order placed! ID: ' + (data.orderResponse.nOrdNo || 'N/A'), 'success');
-                    document.getElementById('orderSymbol').value = '';
-                } else {
-                    showMessage('orderMessage', '❌ ' + (data.error || 'Order failed'), 'error');
-                }
-            } catch (error) {
-                showMessage('orderMessage', '❌ ' + error.message, 'error');
-            }
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        function showMessage(id, msg, type) {
-            const el = document.getElementById(id);
-            if (el) el.innerHTML = `<div class="message ${type}">${msg}</div>`;
-        }
-
-        function logout() {
-            sessionState = { auth: null, sid: null };
-            document.getElementById('loginSection').classList.add('active');
-            document.getElementById('tradingSection').classList.remove('active');
-            document.getElementById('sessionStatus').className = 'status-badge disconnected';
-            document.getElementById('sessionStatus').innerHTML = '<span class="status-dot"></span><span>Disconnected</span>';
-            document.getElementById('totp').value = '';
-            alert('Logged out!');
-        }
 // Helper function to detect exchange segment from trading symbol
 function detectExchangeSegment(tradingSymbol) {
   const symbol = tradingSymbol.toUpperCase();
   
   // F&O segments (Derivatives)
-  if (symbol.includes('NIFTY') || symbol.includes('SENSEX') || 
-      /\d{2}[A-Z]{3}\d{2}/.test(symbol)) { // Pattern like 25NOV06
-    
+  if (symbol.includes('NIFTY') || symbol.includes('SENSEX') || /\d{2}[A-Z]{3}\d{2}/.test(symbol)) {
     // Check if BSE
     if (symbol.includes('SENSEX') || symbol.startsWith('BSX')) {
       return 'bsefo';
     }
-    
     // Default NSE F&O
     return 'nsefo';
   }
@@ -1182,7 +1127,7 @@ function detectProductCode(pos) {
   if (pos.prod) return pos.prod;
   if (pos.pCode) return pos.pCode;
   
-  // Otherwise default to NRML for F&O, MIS for others
+  // Otherwise default to NRML for F&O
   const symbol = pos.trdSym.toUpperCase();
   if (symbol.includes('NIFTY') || symbol.includes('SENSEX')) {
     return 'NRML';
@@ -1191,9 +1136,74 @@ function detectProductCode(pos) {
   return 'NRML'; // Default
 }
 
-        
-    </script>
-    <!-- Exit Position Modal -->
+async function placeOrder() {
+  const orderData = {
+    tradingSymbol: document.getElementById('orderSymbol').value,
+    transactionType: document.getElementById('orderTransaction').value,
+    quantity: parseInt(document.getElementById('orderQuantity').value),
+    price: parseFloat(document.getElementById('orderPrice').value),
+    productCode: document.getElementById('orderProduct').value,
+    priceType: document.getElementById('orderPriceType').value,
+    validity: 'DAY',
+    exchangeSegment: document.getElementById('orderExchange').value
+  };
+  
+  console.log('[LOG] Placing order:', orderData);
+  
+  try {
+    const response = await fetch('/api/placeOrder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'sid': sessionState.sid,
+        'auth': sessionState.auth
+      },
+      body: JSON.stringify({
+        auth: sessionState.auth,
+        sid: sessionState.sid,
+        orderData,
+        orderType: 'REGULAR'
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showMessage('orderMessage', `✅ Order placed! ID: ${data.orderResponse.nOrdNo || 'N/A'}`, 'success');
+      document.getElementById('orderSymbol').value = '';
+    } else {
+      showMessage('orderMessage', `❌ ${data.error || 'Order failed'}`, 'error');
+    }
+  } catch (error) {
+    showMessage('orderMessage', `❌ ${error.message}`, 'error');
+  }
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function showMessage(id, msg, type) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.innerHTML = `<div class="message ${type}">${msg}</div>`;
+  }
+}
+
+function logout() {
+  sessionState = { auth: null, sid: null };
+  document.getElementById('loginSection').classList.add('active');
+  document.getElementById('tradingSection').classList.remove('active');
+  document.getElementById('sessionStatus').className = 'status-badge disconnected';
+  document.getElementById('sessionStatus').innerHTML = '<span class="status-dot"></span><span>Disconnected</span>';
+  document.getElementById('totp').value = '';
+  alert('Logged out!');
+}
+</script>
+ <!-- Exit Position Modal -->
 <div id="exitModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
